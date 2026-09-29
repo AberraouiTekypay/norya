@@ -12,6 +12,8 @@ import {
   CoachMessage,
   Biomarker,
   ConnectedDevice,
+  BloodPressureLog,
+  HealthExperiment,
 } from "@/types/health";
 import {
   initialSarahProfile,
@@ -24,6 +26,8 @@ import {
   initialDoctorSummary,
   sampleTimelineEvents,
   initialConnectedDevices,
+  initialBloodPressureLogs,
+  initialHealthExperiments,
 } from "@/data/mockHealthData";
 import { translations, Language, Translations } from "@/data/translations";
 
@@ -66,11 +70,19 @@ interface HealthContextType {
   syncDevice: (deviceId: string) => Promise<void>;
   syncAllDevices: () => Promise<void>;
   addDoctorQuestion: (question: string) => void;
+  bloodPressureLogs: BloodPressureLog[];
+  addBloodPressureLog: (log: Omit<BloodPressureLog, "id">) => void;
+  isBPModalOpen: boolean;
+  setIsBPModalOpen: (open: boolean) => void;
+  experiments: HealthExperiment[];
+  checkinExperiment: (experimentId: string, day: number, note?: string) => void;
+  startNewExperiment: (exp: Omit<HealthExperiment, "id" | "currentDay" | "checkins" | "status">) => void;
+  togglePreventionItem: (id: string) => void;
 }
 
 const HealthContext = createContext<HealthContextType | undefined>(undefined);
 
-const STORAGE_KEY = "norya_state_v2";
+const STORAGE_KEY = "norya_state_v3";
 
 export const HealthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserProfile>(initialSarahProfile);
@@ -83,6 +95,9 @@ export const HealthProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [doctorSummary, setDoctorSummary] = useState<DoctorSummary>(initialDoctorSummary);
   const [timelineEvents, setTimelineEvents] = useState(sampleTimelineEvents);
   const [connectedDevices, setConnectedDevices] = useState<ConnectedDevice[]>(initialConnectedDevices);
+  const [bloodPressureLogs, setBloodPressureLogs] = useState<BloodPressureLog[]>(initialBloodPressureLogs);
+  const [isBPModalOpen, setIsBPModalOpen] = useState<boolean>(false);
+  const [experiments, setExperiments] = useState<HealthExperiment[]>(initialHealthExperiments);
   const [isSyncingAll, setIsSyncingAll] = useState<boolean>(false);
   const [selectedBiomarker, setSelectedBiomarker] = useState<Biomarker | null>(null);
   const [activeTab, setActiveTab] = useState<string>("home");
@@ -105,6 +120,9 @@ export const HealthProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           if (parsed.labReports) setLabReports(parsed.labReports);
           if (parsed.coachMessages) setCoachMessages(parsed.coachMessages);
           if (parsed.connectedDevices) setConnectedDevices(parsed.connectedDevices);
+          if (parsed.bloodPressureLogs) setBloodPressureLogs(parsed.bloodPressureLogs);
+          if (parsed.experiments) setExperiments(parsed.experiments);
+          if (parsed.preventionItems) setPreventionItems(parsed.preventionItems);
           if (parsed.doctorSummary) setDoctorSummary(parsed.doctorSummary);
           if (parsed.language) setLanguage(parsed.language);
           if (parsed.unitSystem) setUnitSystem(parsed.unitSystem);
@@ -126,6 +144,9 @@ export const HealthProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           labReports,
           coachMessages,
           connectedDevices,
+          bloodPressureLogs,
+          experiments,
+          preventionItems,
           doctorSummary,
           language,
           unitSystem,
@@ -135,7 +156,7 @@ export const HealthProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     } catch (e) {
       console.error("Failed to save local storage state:", e);
     }
-  }, [user, priorities, dailyTasks, labReports, coachMessages, connectedDevices, doctorSummary, language, unitSystem]);
+  }, [user, priorities, dailyTasks, labReports, coachMessages, connectedDevices, bloodPressureLogs, experiments, preventionItems, doctorSummary, language, unitSystem]);
 
   const t = translations[language] || translations.en;
 
@@ -193,6 +214,102 @@ export const HealthProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }));
   };
 
+  const addBloodPressureLog = (log: Omit<BloodPressureLog, "id">) => {
+    const newLog: BloodPressureLog = {
+      ...log,
+      id: `bp-log-${Date.now()}`,
+    };
+    setBloodPressureLogs((prev) => [newLog, ...prev]);
+
+    // Update user profile latest vitals
+    setUser((prev) => ({
+      ...prev,
+      bloodPressureSystolic: log.systolic,
+      bloodPressureDiastolic: log.diastolic,
+      restingHeartRateBpm: log.pulseBpm || prev.restingHeartRateBpm,
+    }));
+
+    // Update daily tasks check-off
+    setDailyTasks((prev) =>
+      prev.map((t) => {
+        if (t.category === "measurement" && t.title.toLowerCase().includes("blood pressure")) {
+          return {
+            ...t,
+            completed: true,
+            status: "completed",
+            current: `${log.systolic}/${log.diastolic} mmHg (${log.timeSlot})`,
+          };
+        }
+        return t;
+      })
+    );
+
+    // Append to timeline
+    setTimelineEvents((prev) => [
+      {
+        id: `tl-bp-${Date.now()}`,
+        date: "Today",
+        category: "metrics",
+        title: `Blood Pressure Logged: ${log.systolic}/${log.diastolic} mmHg`,
+        description: `Day ${log.dayIndex} ${log.timeSlot} measurement recorded. Pulse: ${log.pulseBpm} bpm.`,
+        status: log.systolic >= 140 || log.diastolic >= 90 ? "warning" : "positive",
+      },
+      ...prev,
+    ]);
+  };
+
+  const checkinExperiment = (experimentId: string, day: number, note?: string) => {
+    setExperiments((prev) =>
+      prev.map((exp) => {
+        if (exp.id === experimentId) {
+          const existingIndex = exp.checkins.findIndex((c) => c.day === day);
+          const updatedCheckins = [...exp.checkins];
+          if (existingIndex >= 0) {
+            updatedCheckins[existingIndex] = {
+              ...updatedCheckins[existingIndex],
+              completed: !updatedCheckins[existingIndex].completed,
+              note: note || updatedCheckins[existingIndex].note,
+            };
+          } else {
+            updatedCheckins.push({ day, completed: true, note });
+          }
+          return {
+            ...exp,
+            checkins: updatedCheckins,
+            currentDay: Math.max(exp.currentDay, day),
+          };
+        }
+        return exp;
+      })
+    );
+  };
+
+  const startNewExperiment = (exp: Omit<HealthExperiment, "id" | "currentDay" | "checkins" | "status">) => {
+    const newExp: HealthExperiment = {
+      ...exp,
+      id: `exp-${Date.now()}`,
+      currentDay: 1,
+      status: "active",
+      checkins: [{ day: 1, completed: true, note: "Protocol initiated" }],
+    };
+    setExperiments((prev) => [newExp, ...prev]);
+  };
+
+  const togglePreventionItem = (id: string) => {
+    setPreventionItems((prev) =>
+      prev.map((item) => {
+        if (item.id !== id) return item;
+        const isDone = item.status === "completed";
+        return {
+          ...item,
+          status: isDone ? "due_soon" : "completed",
+          lastCompleted: isDone ? item.lastCompleted : new Date().toISOString().split("T")[0],
+          nextDue: isDone ? "Action needed" : "Completed today",
+        };
+      })
+    );
+  };
+
   const resetToDemoUser = () => {
     setUser(initialSarahProfile);
     setPriorities(initialPriorities);
@@ -204,6 +321,8 @@ export const HealthProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setDoctorSummary(initialDoctorSummary);
     setTimelineEvents(sampleTimelineEvents);
     setConnectedDevices(initialConnectedDevices);
+    setBloodPressureLogs(initialBloodPressureLogs);
+    setExperiments(initialHealthExperiments);
     if (typeof window !== "undefined") {
       localStorage.removeItem(STORAGE_KEY);
     }
@@ -444,6 +563,14 @@ export const HealthProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         syncDevice,
         syncAllDevices,
         addDoctorQuestion,
+        bloodPressureLogs,
+        addBloodPressureLog,
+        isBPModalOpen,
+        setIsBPModalOpen,
+        experiments,
+        checkinExperiment,
+        startNewExperiment,
+        togglePreventionItem,
       }}
     >
       {children}

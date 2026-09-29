@@ -37,6 +37,7 @@ export const HomeView: React.FC = () => {
     isSyncingAll,
     setSelectedBiomarker,
     labReports,
+    setIsBPModalOpen,
     t,
   } = useHealth();
 
@@ -153,10 +154,10 @@ export const HomeView: React.FC = () => {
             </div>
           </div>
           <button
-            onClick={() => setActiveTab("labs")}
+            onClick={() => setIsBPModalOpen(true)}
             className="text-[11px] font-semibold text-[#0F766E] hover:underline"
           >
-            Vitals Log →
+            7-Day Protocol →
           </button>
         </div>
       </div>
@@ -221,6 +222,31 @@ export const HomeView: React.FC = () => {
                   <p className="text-xs text-[#0F172A] leading-relaxed">
                     {item.why}
                   </p>
+
+                  {/* Priority action buttons */}
+                  {item.rank === 1 && (
+                    <button
+                      onClick={() => setIsBPModalOpen(true)}
+                      className="w-full py-2 rounded-xl bg-[#CCFBF1] text-[#0F766E] text-xs font-semibold hover:bg-[#99F6E4] transition-colors flex items-center justify-center gap-1.5"
+                    >
+                      <Activity className="w-3.5 h-3.5" />
+                      <span>Log Home BP (Day 3/7) →</span>
+                    </button>
+                  )}
+
+                  {item.rank === 3 && (
+                    <button
+                      onClick={() =>
+                        setSelectedBiomarker(
+                          labReports[0]?.biomarkers.find((b) => b.canonicalName === "ApoB") || null
+                        )
+                      }
+                      className="w-full py-2 rounded-xl bg-[#0F172A] text-white text-xs font-semibold hover:bg-[#1E293B] transition-colors flex items-center justify-center gap-1.5"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-[#14B8A6]" />
+                      <span>Explore ApoB Levers & Chart →</span>
+                    </button>
+                  )}
 
                   {/* Expandable deeper evidence & "Not important now" */}
                   {isExpanded && (

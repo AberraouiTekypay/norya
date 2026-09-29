@@ -182,3 +182,30 @@ export interface ConnectedDevice {
   batteryPercent?: number;
   syncFrequency: "realtime" | "hourly" | "daily";
 }
+
+export interface BloodPressureLog {
+  id: string;
+  dayIndex: number; // 1 to 7
+  date: string;
+  timeSlot: "AM" | "PM";
+  systolic: number;
+  diastolic: number;
+  pulseBpm: number;
+  restMinutes: number;
+  arm: "left" | "right";
+  notes?: string;
+}
+
+export interface HealthExperiment {
+  id: string;
+  title: string;
+  category: "nutrition" | "movement" | "sleep" | "cardiovascular";
+  hypothesis: string;
+  durationDays: number;
+  currentDay: number;
+  status: "active" | "completed" | "upcoming";
+  checkins: { day: number; completed: boolean; note?: string }[];
+  targetBiomarker?: string;
+  expectedDelta?: string;
+  scientificRationale: string;
+}

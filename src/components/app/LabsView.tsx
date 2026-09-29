@@ -22,17 +22,55 @@ export const LabsView: React.FC = () => {
   const [unitMode, setUnitMode] = useState<"standard" | "si">("standard"); // mg/dL vs mmol/L
   const [isUploading, setIsUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [ocrStep, setOcrStep] = useState(0);
 
   const currentReport = labReports[0];
 
-  const handleSimulatedUpload = () => {
+  const handleSimulatedUpload = async (labSource: "echevarne" | "casablanca" = "echevarne") => {
     setIsUploading(true);
-    setTimeout(() => {
-      uploadLabReport("Synlab Madrid Follow-Up Panel (Sep 2026)");
-      setIsUploading(false);
-      setUploadSuccess(true);
-      setTimeout(() => setUploadSuccess(false), 4000);
-    }, 1200);
+    setOcrStep(1); // Scanning document
+
+    await new Promise((r) => setTimeout(r, 600));
+    setOcrStep(2); // Extracting tokens
+
+    await new Promise((r) => setTimeout(r, 700));
+    setOcrStep(3); // Normalizing units
+
+    await new Promise((r) => setTimeout(r, 600));
+    setOcrStep(4); // Clinical matching
+
+    await new Promise((r) => setTimeout(r, 500));
+
+    const title =
+      labSource === "echevarne"
+        ? "Laboratorios Echevarne Madrid (Lipid Follow-Up)"
+        : "Laboratoire d'Analyses Médicales Casablanca (Bilan Cardiovasculaire)";
+
+    uploadLabReport(title);
+    setIsUploading(false);
+    setOcrStep(0);
+    setUploadSuccess(true);
+    setTimeout(() => setUploadSuccess(false), 5000);
+  };
+
+  const formatBiomarkerValue = (marker: Biomarker) => {
+    if (unitMode === "si") {
+      if (marker.canonicalName === "ApoB") return `${(marker.value * 0.01).toFixed(2)} g/L`;
+      if (marker.canonicalName === "Triglycerides") return `${(marker.value * 0.0113).toFixed(2)} mmol/L`;
+      if (marker.canonicalName === "LDL-C") return `${(marker.value * 0.0259).toFixed(2)} mmol/L`;
+      if (marker.canonicalName === "HbA1c") return `${Math.round((marker.value - 2.15) * 10.93)} mmol/mol`;
+    }
+    return `${marker.value} ${marker.unit}`;
+  };
+
+  const formatBiomarkerRef = (marker: Biomarker) => {
+    if (unitMode === "si") {
+      if (marker.canonicalName === "ApoB") return `0.60–0.90 g/L`;
+      if (marker.canonicalName === "Triglycerides") return `<1.70 mmol/L`;
+      if (marker.canonicalName === "LDL-C") return `<3.00 mmol/L`;
+      if (marker.canonicalName === "HbA1c") return `20–38 mmol/mol`;
+    }
+    return `${marker.referenceLow}–${marker.referenceHigh} ${marker.unit}`;
   };
 
   return (
@@ -57,7 +95,7 @@ export const LabsView: React.FC = () => {
             onClick={() => setUnitMode(unitMode === "standard" ? "si" : "standard")}
             className="px-3 py-1.5 rounded-xl bg-white border border-[#0F172A]/10 text-xs font-semibold text-[#0F172A] hover:bg-[#FAFAF8] transition-colors"
           >
-            Units: {unitMode === "standard" ? "US/Spain (mg/dL)" : "SI (mmol/L)"}
+            Units: {unitMode === "standard" ? "Spain / US (mg/dL)" : "SI / Europe (mmol/L, g/L)"}
           </button>
           <button
             onClick={() => setActiveTab("doctor")}
@@ -77,33 +115,56 @@ export const LabsView: React.FC = () => {
 
         <div className="max-w-md mx-auto space-y-1">
           <h3 className="text-base font-bold text-[#0F172A]">
-            Upload Blood Test Report (PDF, Photo, or Scan)
+            Upload Blood Test Report (PDF, Photo, or Portal Scan)
           </h3>
           <p className="text-xs text-[#64748B] leading-relaxed">
-            Drag and drop clinical files from Echevarne, Synlab, Megalab, or hospital lab portals. Norya automatically standardizes biomarkers.
+            Drag and drop clinical panels from Spain (Echevarne, Synlab, Megalab) or Morocco (Laboratoires d&apos;Analyses). Norya parses and normalizes your biomarkers automatically.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-          <button
-            onClick={handleSimulatedUpload}
-            disabled={isUploading}
-            className="px-6 py-2.5 rounded-xl bg-[#0F172A] text-white font-semibold text-xs hover:bg-[#1E293B] shadow-xs transition-colors flex items-center gap-2"
-          >
-            {isUploading ? (
-              <span>Extracting Biomarkers with OCR...</span>
-            ) : (
-              <>
-                <Sparkles className="w-3.5 h-3.5 text-[#14B8A6]" />
-                <span>Simulate Upload & Verification</span>
-              </>
-            )}
-          </button>
-        </div>
+        {/* OCR Step-by-Step Animated Indicator */}
+        {isUploading && (
+          <div className="max-w-sm mx-auto p-4 rounded-2xl bg-[#FAFAF8] border border-[#0F172A]/10 space-y-2 animate-in fade-in">
+            <div className="flex items-center justify-between text-xs font-semibold text-[#0F172A]">
+              <span>OCR Extraction Pipeline</span>
+              <span className="font-mono text-[#0F766E]">{ocrStep} / 4</span>
+            </div>
+            <div className="w-full bg-[#E2E8F0] h-1.5 rounded-full overflow-hidden">
+              <div
+                className="bg-[#14B8A6] h-full transition-all duration-300"
+                style={{ width: `${(ocrStep / 4) * 100}%` }}
+              />
+            </div>
+            <div className="text-[11px] text-[#64748B]">
+              {ocrStep === 1 && "🔍 1. Scanning document geometry & laboratory header..."}
+              {ocrStep === 2 && "🧪 2. Isolating lipid, glycemic, and renal biomarkers..."}
+              {ocrStep === 3 && "🔬 3. Normalizing units against ESC / AHA consensus standards..."}
+              {ocrStep === 4 && "✅ 4. Generating longitudinal comparisons & clinical questions..."}
+            </div>
+          </div>
+        )}
+
+        {/* Sample Lab Selectors */}
+        {!isUploading && (
+          <div className="flex flex-wrap items-center justify-center gap-2.5 pt-1">
+            <button
+              onClick={() => handleSimulatedUpload("echevarne")}
+              className="px-4 py-2 rounded-xl bg-[#0F172A] text-white text-xs font-semibold hover:bg-[#1E293B] shadow-xs transition-all flex items-center gap-2"
+            >
+              <span>🇪🇸 Upload Sample: Laboratorios Echevarne (Madrid)</span>
+            </button>
+            <button
+              onClick={() => handleSimulatedUpload("casablanca")}
+              className="px-4 py-2 rounded-xl bg-white border border-[#0F172A]/15 text-[#0F172A] text-xs font-semibold hover:bg-[#FAFAF8] shadow-2xs transition-all flex items-center gap-2"
+            >
+              <span>🇲🇦 Upload Sample: Laboratoire Casablanca</span>
+            </button>
+          </div>
+        )}
 
         {uploadSuccess && (
-          <div className="p-3 rounded-xl bg-[#16A34A]/10 border border-[#16A34A]/20 text-xs font-semibold text-[#16A34A] max-w-md mx-auto animate-in fade-in">
-            ✓ Successfully parsed 7 biomarkers! Health timeline and priority matrix updated.
+          <div className="p-3.5 rounded-2xl bg-[#16A34A]/10 border border-[#16A34A]/20 text-xs font-semibold text-[#16A34A] max-w-md mx-auto animate-in fade-in">
+            ✓ Successfully parsed 7 biomarkers! Longitudinal progression curve and Doctor Brief updated.
           </div>
         )}
       </div>

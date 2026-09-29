@@ -24,6 +24,9 @@ export const PlanView: React.FC = () => {
     deferTask,
     addNewTask,
     user,
+    experiments,
+    checkinExperiment,
+    startNewExperiment,
   } = useHealth();
 
   const [newTaskTitle, setNewTaskTitle] = useState("");
@@ -33,6 +36,8 @@ export const PlanView: React.FC = () => {
   const [newTaskTarget, setNewTaskTarget] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showSundayReview, setShowSundayReview] = useState(false);
+  const [reviewTab, setReviewTab] = useState<"compliance" | "vitals" | "adjustments">("compliance");
+  const [reviewSavedToast, setReviewSavedToast] = useState(false);
 
   const completedCount = dailyTasks.filter((t) => t.status === "completed").length;
   const adherenceRate = Math.round((completedCount / (dailyTasks.length || 1)) * 100);
@@ -49,23 +54,6 @@ export const PlanView: React.FC = () => {
     setNewTaskTarget("");
     setShowAddModal(false);
   };
-
-  const experiments = [
-    {
-      title: "10-Minute Post-Meal Walk",
-      hypothesis: "A short 10-minute walk within 30 minutes after dinner lowers postprandial glucose peaks and aids digestion.",
-      duration: "14 Days (Active: Day 6)",
-      status: "In Progress",
-      progress: 60,
-    },
-    {
-      title: "14:00 Caffeine Cutoff",
-      hypothesis: "Eliminating caffeine after 14:00 increases slow-wave deep sleep and stabilizes morning resting heart rate.",
-      duration: "14 Days",
-      status: "Upcoming",
-      progress: 0,
-    },
-  ];
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
@@ -226,36 +214,125 @@ export const PlanView: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {experiments.map((exp, idx) => (
-            <div
-              key={idx}
-              className="p-5 rounded-2xl bg-white border border-[#0F172A]/8 shadow-soft space-y-3"
-            >
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-[#0F172A]">
-                  {exp.title}
-                </h3>
-                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-                  exp.status === "In Progress" ? "bg-[#CCFBF1] text-[#0F766E]" : "bg-[#F1F5F9] text-[#64748B]"
-                }`}>
-                  {exp.status}
-                </span>
-              </div>
+          {experiments.map((exp) => {
+            const isActive = exp.status === "active";
+            const isCompleted = exp.status === "completed";
+            const completedCheckins = exp.checkins.filter((c) => c.completed).length;
+            const pct = Math.round((completedCheckins / exp.durationDays) * 100);
 
-              <p className="text-xs text-[#64748B] leading-relaxed">
-                {exp.hypothesis}
-              </p>
-
-              <div className="pt-2 border-t border-[#0F172A]/5 flex items-center justify-between text-xs text-[#64748B]">
-                <span>Duration: {exp.duration}</span>
-                {exp.progress > 0 && (
-                  <span className="font-mono text-[#0F766E] font-bold">
-                    {exp.progress}% Complete
+            return (
+              <div
+                key={exp.id}
+                className="p-5 rounded-2xl bg-white border border-[#0F172A]/8 shadow-soft space-y-4"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-mono font-bold uppercase text-[#0F766E] bg-[#CCFBF1] px-2 py-0.5 rounded-full">
+                      {exp.category}
+                    </span>
+                    <h3 className="text-sm font-bold text-[#0F172A]">
+                      {exp.title}
+                    </h3>
+                  </div>
+                  <span
+                    className={`text-[10px] font-semibold px-2.5 py-0.5 rounded-full ${
+                      isActive
+                        ? "bg-[#14B8A6] text-white"
+                        : isCompleted
+                        ? "bg-[#16A34A]/10 text-[#16A34A]"
+                        : "bg-[#F1F5F9] text-[#64748B]"
+                    }`}
+                  >
+                    {isActive ? `Day ${exp.currentDay} of 14` : isCompleted ? "Completed" : "Upcoming"}
                   </span>
+                </div>
+
+                <p className="text-xs text-[#64748B] leading-relaxed">
+                  {exp.hypothesis}
+                </p>
+
+                {/* Expected biomarker delta */}
+                {exp.expectedDelta && (
+                  <div className="p-3 rounded-xl bg-[#FAFAF8] border border-[#0F172A]/5 space-y-1 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-[#0F172A] text-[11px]">Target Biomarker:</span>
+                      <span className="font-mono text-[#0F766E] font-semibold">{exp.targetBiomarker}</span>
+                    </div>
+                    <div className="text-[11px] text-[#64748B]">
+                      Expected Impact: <strong>{exp.expectedDelta}</strong>
+                    </div>
+                  </div>
                 )}
+
+                {/* 14-Day Checkin Circles */}
+                <div className="space-y-1.5 pt-1">
+                  <div className="flex items-center justify-between text-[11px] text-[#64748B]">
+                    <span>14-Day Checkin Streak</span>
+                    <span className="font-mono font-bold text-[#0F172A]">
+                      {completedCheckins} / {exp.durationDays} Days ({pct}%)
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {Array.from({ length: 14 }).map((_, i) => {
+                      const dayNum = i + 1;
+                      const checkin = exp.checkins.find((c) => c.day === dayNum);
+                      const isDone = checkin?.completed;
+                      const isCurrent = exp.currentDay === dayNum && isActive;
+
+                      return (
+                        <button
+                          key={dayNum}
+                          onClick={() => isActive && checkinExperiment(exp.id, dayNum)}
+                          disabled={!isActive}
+                          title={`Day ${dayNum}${checkin?.note ? `: ${checkin.note}` : ""}`}
+                          className={`w-6 h-6 rounded-lg text-[10px] font-mono font-bold flex items-center justify-center transition-all ${
+                            isDone
+                              ? "bg-[#14B8A6] text-white shadow-2xs"
+                              : isCurrent
+                              ? "bg-white border-2 border-[#14B8A6] text-[#14B8A6]"
+                              : "bg-[#F1F5F9] text-[#94A3B8]"
+                          }`}
+                        >
+                          {isDone ? "✓" : dayNum}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Experiment Action Row */}
+                <div className="pt-2 border-t border-[#0F172A]/5 flex items-center justify-between text-xs">
+                  {isActive ? (
+                    <button
+                      onClick={() => checkinExperiment(exp.id, exp.currentDay, "Completed daily protocol")}
+                      className="px-3.5 py-1.5 rounded-xl bg-[#0F172A] text-white text-xs font-semibold hover:bg-[#1E293B] transition-colors"
+                    >
+                      Check In Today (Day {exp.currentDay})
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() =>
+                        startNewExperiment({
+                          title: exp.title,
+                          category: exp.category,
+                          hypothesis: exp.hypothesis,
+                          durationDays: 14,
+                          targetBiomarker: exp.targetBiomarker,
+                          expectedDelta: exp.expectedDelta,
+                          scientificRationale: exp.scientificRationale,
+                        })
+                      }
+                      className="px-3.5 py-1.5 rounded-xl bg-[#CCFBF1] text-[#0F766E] text-xs font-semibold hover:bg-[#99F6E4] transition-colors"
+                    >
+                      Activate Protocol →
+                    </button>
+                  )}
+                  <span className="text-[11px] text-[#64748B]">14-Day N=1 Trial</span>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
@@ -330,10 +407,10 @@ export const PlanView: React.FC = () => {
         </div>
       )}
 
-      {/* Modal: Sunday Weekly Review */}
+      {/* Modal: Interactive 3-Tab Sunday Weekly Review */}
       {showSundayReview && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl space-y-5 animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-xl w-full shadow-2xl space-y-5 animate-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between pb-3 border-b border-[#0F172A]/5">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-[#14B8A6]" />
@@ -344,34 +421,120 @@ export const PlanView: React.FC = () => {
               </button>
             </div>
 
-            <div className="space-y-3 text-xs leading-relaxed text-[#64748B]">
-              <div className="p-3.5 rounded-2xl bg-[#CCFBF1]/30 border border-[#14B8A6]/20 text-[#0F766E] space-y-1">
-                <span className="font-bold uppercase tracking-wider text-[10px]">What Improved This Week:</span>
-                <ul className="space-y-0.5">
-                  <li>• Daily steps increased by <strong>+17%</strong> (averaged 6,920 steps)</li>
-                  <li>• Weight dropped smoothly by <strong>-0.3 kg</strong> to 82.4 kg</li>
-                  <li>• Morning BP reading protocol: 3 of 7 readings successfully completed</li>
-                </ul>
-              </div>
-
-              <div className="p-3.5 rounded-2xl bg-[#F97360]/10 border border-[#F97360]/20 text-[#0F172A] space-y-1">
-                <span className="font-bold uppercase tracking-wider text-[10px] text-[#F97360]">Needs Attention Next Week:</span>
-                <p>3 consecutive short nights pulled your sleep average to 5h 54m.</p>
-              </div>
-
-              <div className="p-3.5 rounded-2xl bg-[#FAFAF8] border border-[#0F172A]/5 text-[#0F172A] space-y-1">
-                <span className="font-bold uppercase tracking-wider text-[10px] text-[#64748B]">Coach Adjustment:</span>
-                <p>&ldquo;Maintain your 7,000-step target without increasing it yet. Move lights-out forward by 30 minutes to repay sleep debt.&rdquo;</p>
-              </div>
+            {/* Navigation Tabs */}
+            <div className="flex items-center gap-2 pb-1 border-b border-[#0F172A]/5 text-xs">
+              <button
+                onClick={() => setReviewTab("compliance")}
+                className={`px-3 py-1.5 rounded-lg font-semibold transition-colors ${
+                  reviewTab === "compliance"
+                    ? "bg-[#0F172A] text-white"
+                    : "text-[#64748B] hover:bg-[#F1F5F9]"
+                }`}
+              >
+                1. Weekly Compliance
+              </button>
+              <button
+                onClick={() => setReviewTab("vitals")}
+                className={`px-3 py-1.5 rounded-lg font-semibold transition-colors ${
+                  reviewTab === "vitals"
+                    ? "bg-[#0F172A] text-white"
+                    : "text-[#64748B] hover:bg-[#F1F5F9]"
+                }`}
+              >
+                2. Biomarker Shifts
+              </button>
+              <button
+                onClick={() => setReviewTab("adjustments")}
+                className={`px-3 py-1.5 rounded-lg font-semibold transition-colors ${
+                  reviewTab === "adjustments"
+                    ? "bg-[#0F172A] text-white"
+                    : "text-[#64748B] hover:bg-[#F1F5F9]"
+                }`}
+              >
+                3. Next Week Reset
+              </button>
             </div>
 
-            <div className="pt-2 flex justify-end">
-              <button
-                onClick={() => setShowSundayReview(false)}
-                className="px-6 py-2.5 rounded-xl bg-[#0F172A] text-white text-xs font-semibold hover:bg-[#1E293B]"
-              >
-                Accept Next Week&apos;s Plan
-              </button>
+            {/* Tab 1: Compliance */}
+            {reviewTab === "compliance" && (
+              <div className="space-y-3 text-xs text-[#64748B] animate-in fade-in">
+                <div className="p-4 rounded-2xl bg-[#CCFBF1]/30 border border-[#14B8A6]/20 space-y-1.5 text-[#0F766E]">
+                  <span className="font-bold uppercase tracking-wider text-[10px]">What Succeeded:</span>
+                  <ul className="space-y-1">
+                    <li>• Daily steps averaged <strong>6,920 steps</strong> (+17% week-over-week)</li>
+                    <li>• Protein target hit on <strong>5 of 7 days</strong> (120g anchor)</li>
+                    <li>• Blood pressure monitoring: Day 3/7 on track (average 134/84 mmHg)</li>
+                  </ul>
+                </div>
+                <div className="p-3.5 rounded-2xl bg-[#F97360]/10 border border-[#F97360]/20 text-[#0F172A] space-y-1">
+                  <span className="font-bold uppercase tracking-wider text-[10px] text-[#F97360]">Friction Point:</span>
+                  <p>Sleep duration dipped to 5h 54m on Wednesday and Thursday due to late screen exposure.</p>
+                </div>
+              </div>
+            )}
+
+            {/* Tab 2: Vitals */}
+            {reviewTab === "vitals" && (
+              <div className="space-y-3 text-xs text-[#64748B] animate-in fade-in">
+                <div className="grid grid-cols-2 gap-3 text-[#0F172A]">
+                  <div className="p-3.5 rounded-xl bg-[#FAFAF8] border border-[#0F172A]/5">
+                    <span className="text-[10px] uppercase font-bold text-[#64748B]">Weight Trend</span>
+                    <div className="text-xl font-bold font-mono">82.4 kg (-0.3 kg)</div>
+                    <span className="text-[10px] text-[#16A34A] font-semibold">Steady -3.7 kg total</span>
+                  </div>
+                  <div className="p-3.5 rounded-xl bg-[#FAFAF8] border border-[#0F172A]/5">
+                    <span className="text-[10px] uppercase font-bold text-[#64748B]">Resting HR</span>
+                    <div className="text-xl font-bold font-mono">67 bpm (-5 bpm)</div>
+                    <span className="text-[10px] text-[#16A34A] font-semibold">Aerobic adaptation</span>
+                  </div>
+                </div>
+                <p className="text-[11px] leading-relaxed">
+                  Your cardiovascular baseline is adapting well to consistent brisk walking. Blood pressure is steady without excessive spikes.
+                </p>
+              </div>
+            )}
+
+            {/* Tab 3: Adjustments */}
+            {reviewTab === "adjustments" && (
+              <div className="space-y-3 text-xs text-[#0F172A] animate-in fade-in">
+                <div className="p-4 rounded-2xl bg-[#FAFAF8] border border-[#0F172A]/5 space-y-2">
+                  <span className="font-bold uppercase tracking-wider text-[10px] text-[#0F766E]">
+                    Coach Recommendations for Next Week:
+                  </span>
+                  <div className="space-y-1 text-xs text-[#64748B]">
+                    <p>1. <strong>Keep Step Goal at 7,000</strong>: Do not increase steps yet; consolidate this habit first.</p>
+                    <p>2. <strong>Set Bedtime Anchor to 22:15</strong>: Protect your 7-hour recovery window.</p>
+                    <p>3. <strong>Complete Remaining 4 Days of BP Protocol</strong>: Conclude the ESC home record for doctor consultation.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Modal Footer */}
+            <div className="pt-2 flex items-center justify-between">
+              {reviewSavedToast && (
+                <span className="text-xs font-semibold text-[#16A34A]">✓ Week confirmed!</span>
+              )}
+              <div className="ml-auto flex gap-2">
+                <button
+                  onClick={() => setShowSundayReview(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-[#64748B] hover:bg-[#F1F5F9]"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => {
+                    setReviewSavedToast(true);
+                    setTimeout(() => {
+                      setReviewSavedToast(false);
+                      setShowSundayReview(false);
+                    }, 1200);
+                  }}
+                  className="px-6 py-2.5 rounded-xl bg-[#0F172A] text-white text-xs font-semibold hover:bg-[#1E293B]"
+                >
+                  Commit & Lock In Week
+                </button>
+              </div>
             </div>
           </div>
         </div>
