@@ -14,12 +14,11 @@ import {
 } from "lucide-react";
 
 export const DoctorModeView: React.FC = () => {
-  const { doctorSummary, user } = useHealth();
+  const { doctorSummary, user, addDoctorQuestion } = useHealth();
   const [copied, setCopied] = useState(false);
   const [customQuestion, setCustomQuestion] = useState("");
-  const [questionsList, setQuestionsList] = useState(
-    doctorSummary.suggestedQuestionsToDiscuss
-  );
+
+  const questionsList = doctorSummary.suggestedQuestionsToDiscuss;
 
   const handleCopy = () => {
     const textToCopy = `
@@ -57,7 +56,7 @@ ${questionsList.map((q, idx) => `${idx + 1}. ${q}`).join("\n")}
   const handleAddQuestion = (e: React.FormEvent) => {
     e.preventDefault();
     if (!customQuestion.trim()) return;
-    setQuestionsList((prev) => [...prev, customQuestion]);
+    addDoctorQuestion(customQuestion);
     setCustomQuestion("");
   };
 
@@ -65,7 +64,7 @@ ${questionsList.map((q, idx) => `${idx + 1}. ${q}`).join("\n")}
     <div className="space-y-8 animate-in fade-in duration-300">
       
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 print:hidden">
         <div>
           <div className="text-xs font-semibold uppercase tracking-wider text-[#64748B]">
             Clinical Collaboration Engine
@@ -97,7 +96,7 @@ ${questionsList.map((q, idx) => `${idx + 1}. ${q}`).join("\n")}
       </div>
 
       {/* Structured 1-Page Medical Document Sheet */}
-      <div className="p-6 sm:p-10 rounded-3xl bg-white border border-[#0F172A]/10 shadow-card space-y-6 max-w-4xl mx-auto print:shadow-none print:border-none print:p-0">
+      <div className="p-6 sm:p-10 rounded-3xl bg-white border border-[#0F172A]/10 shadow-card space-y-6 max-w-4xl mx-auto print:shadow-none print:border-none print:p-0 print:m-0 print:max-w-none">
         
         {/* Document Header */}
         <div className="pb-6 border-b border-[#0F172A]/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -194,7 +193,7 @@ ${questionsList.map((q, idx) => `${idx + 1}. ${q}`).join("\n")}
           </div>
 
           {/* Add custom question */}
-          <form onSubmit={handleAddQuestion} className="flex gap-2 pt-2">
+          <form onSubmit={handleAddQuestion} className="flex gap-2 pt-2 print:hidden">
             <input
               type="text"
               placeholder="Add another question for your doctor..."
@@ -211,9 +210,27 @@ ${questionsList.map((q, idx) => `${idx + 1}. ${q}`).join("\n")}
           </form>
         </div>
 
+        {/* Physician Clinical Notes & Signature */}
+        <div className="pt-6 border-t border-[#0F172A]/10 space-y-4">
+          <div className="text-[10px] uppercase font-bold text-[#64748B] tracking-wider">
+            5. Physician Clinical Assessment & Consultation Notes
+          </div>
+          <div className="h-24 rounded-xl border border-dashed border-[#0F172A]/20 bg-[#FAFAF8] p-3 text-[11px] text-[#94A3B8]">
+            Clinical notes / titration plan / target review interval / laboratory orders...
+          </div>
+          <div className="grid grid-cols-2 gap-8 pt-4 text-xs">
+            <div className="border-t border-[#0F172A]/30 pt-1">
+              <span className="text-[10px] text-[#64748B] uppercase block">Physician Signature & License #</span>
+            </div>
+            <div className="border-t border-[#0F172A]/30 pt-1">
+              <span className="text-[10px] text-[#64748B] uppercase block">Date & Next Follow-Up Target</span>
+            </div>
+          </div>
+        </div>
+
         {/* Document Footer Notice */}
         <div className="pt-4 border-t border-[#0F172A]/10 text-[10px] text-[#64748B] text-center">
-          Summary generated via Norya Personal Health OS. Intended solely to facilitate patient-physician discussion. Not a diagnosis or clinical prescription.
+          Summary generated via Norya Personal Health OS • getnorya.com • Intended solely to facilitate patient-physician collaboration. Not a standalone diagnosis or medical prescription.
         </div>
 
       </div>

@@ -19,8 +19,10 @@ import {
   ExternalLink,
   RotateCcw,
   CheckCircle2,
+  Watch,
   X,
 } from "lucide-react";
+import { BiomarkerModal } from "./BiomarkerModal";
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -35,6 +37,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
     toggleUnitSystem,
     language,
     setLanguage,
+    t,
     resetToDemoUser,
     setIsOnboardingOpen,
     emergencyAlert,
@@ -42,16 +45,17 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
   } = useHealth();
 
   const navItems = [
-    { id: "home", label: "Home", icon: LayoutDashboard, badge: undefined },
-    { id: "coach", label: "AI Coach", icon: MessageSquare, badge: "Active" },
-    { id: "health", label: "Health Domains", icon: Activity, badge: "6 Domains" },
-    { id: "plan", label: "Plan & Habits", icon: CalendarCheck, badge: undefined },
-    { id: "labs", label: "Labs & Tests", icon: FileSpreadsheet, badge: "ApoB 105" },
-    { id: "progress", label: "Progress", icon: TrendingUp, badge: "Score 31" },
-    { id: "timeline", label: "Timeline", icon: History, badge: undefined },
-    { id: "prevention", label: "Prevention", icon: ShieldCheck, badge: "6/8" },
-    { id: "doctor", label: "Doctor Handoff", icon: Stethoscope, badge: "Brief" },
-    { id: "settings", label: "Profile & Settings", icon: Settings, badge: undefined },
+    { id: "home", label: t.nav.home, icon: LayoutDashboard, badge: undefined },
+    { id: "coach", label: t.nav.coach, icon: MessageSquare, badge: "AI" },
+    { id: "health", label: t.nav.health, icon: Activity, badge: "6 Domains" },
+    { id: "plan", label: t.nav.plan, icon: CalendarCheck, badge: undefined },
+    { id: "labs", label: t.nav.labs, icon: FileSpreadsheet, badge: "ApoB 105" },
+    { id: "progress", label: t.nav.progress, icon: TrendingUp, badge: "Score 31" },
+    { id: "timeline", label: t.nav.timeline, icon: History, badge: undefined },
+    { id: "prevention", label: t.nav.prevention, icon: ShieldCheck, badge: "6/8" },
+    { id: "devices", label: t.nav.devices, icon: Watch, badge: "4 Synced" },
+    { id: "doctor", label: t.nav.doctor, icon: Stethoscope, badge: "Brief" },
+    { id: "settings", label: t.nav.settings, icon: Settings, badge: undefined },
   ];
 
   return (
@@ -59,7 +63,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
       
       {/* Emergency Alert Banner */}
       {emergencyAlert && (
-        <div className="fixed top-0 left-0 right-0 z-50 p-4 bg-[#F97360] text-white shadow-xl flex items-center justify-between gap-4 animate-in slide-in-from-top duration-300">
+        <div className="fixed top-0 left-0 right-0 z-50 p-4 bg-[#F97360] text-white shadow-xl flex items-center justify-between gap-4 animate-in slide-in-from-top duration-300 print:hidden">
           <div className="flex items-center gap-3 max-w-4xl mx-auto">
             <AlertTriangle className="w-6 h-6 shrink-0 animate-bounce" />
             <div className="text-xs sm:text-sm font-medium leading-relaxed">
@@ -76,7 +80,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
       )}
 
       {/* Desktop Left Sidebar */}
-      <aside className="hidden md:flex flex-col justify-between w-64 lg:w-72 bg-white border-r border-[#0F172A]/8 h-screen sticky top-0 shrink-0 p-5 overflow-y-auto">
+      <aside className="hidden md:flex flex-col justify-between w-64 lg:w-72 bg-white border-r border-[#0F172A]/8 h-screen sticky top-0 shrink-0 p-5 overflow-y-auto print:hidden">
         
         {/* Top brand & profile */}
         <div className="space-y-6">
@@ -211,10 +215,10 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col min-w-0 pb-20 md:pb-8">
+      <main className="flex-1 flex flex-col min-w-0 pb-20 md:pb-8 print:p-0 print:m-0">
         
         {/* Mobile Header */}
-        <header className="md:hidden bg-white border-b border-[#0F172A]/5 px-4 py-3 flex items-center justify-between sticky top-0 z-30">
+        <header className="md:hidden bg-white border-b border-[#0F172A]/5 px-4 py-3 flex items-center justify-between sticky top-0 z-30 print:hidden">
           <Link href="/" className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg bg-[#0F172A] flex items-center justify-center text-[#14B8A6] font-bold text-sm">
               N
@@ -235,12 +239,12 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
         </header>
 
         {/* View Content */}
-        <div className="max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <div className="max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 print:p-0 print:m-0 print:max-w-none">
           {children}
         </div>
 
         {/* App Footer for mobile */}
-        <div className="md:hidden py-6 text-center text-xs text-[#94A3B8] border-t border-[#0F172A]/5 mt-auto">
+        <div className="md:hidden py-6 text-center text-xs text-[#94A3B8] border-t border-[#0F172A]/5 mt-auto print:hidden">
           <span>An </span>
           <a
             href="https://em300.co"
@@ -255,15 +259,19 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
 
       </main>
 
+      {/* Global Biomarker Detail Modal */}
+      <BiomarkerModal />
+
       {/* Mobile Bottom Navigation */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#0F172A]/10 px-2 py-2 flex items-center justify-around shadow-lg">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#0F172A]/10 px-2 py-2 flex items-center justify-around shadow-lg print:hidden">
         {[
-          { id: "home", label: "Home", icon: LayoutDashboard },
-          { id: "coach", label: "Coach", icon: MessageSquare },
-          { id: "health", label: "Health", icon: Activity },
-          { id: "plan", label: "Plan", icon: CalendarCheck },
-          { id: "labs", label: "Labs", icon: FileSpreadsheet },
-          { id: "doctor", label: "Doctor", icon: Stethoscope },
+          { id: "home", label: t.nav.home, icon: LayoutDashboard },
+          { id: "coach", label: t.nav.coach, icon: MessageSquare },
+          { id: "health", label: t.nav.health, icon: Activity },
+          { id: "plan", label: t.nav.plan, icon: CalendarCheck },
+          { id: "labs", label: t.nav.labs, icon: FileSpreadsheet },
+          { id: "devices", label: t.nav.devices, icon: Watch },
+          { id: "doctor", label: t.nav.doctor, icon: Stethoscope },
         ].map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;

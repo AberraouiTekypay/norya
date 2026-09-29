@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 import {
   UserProfile,
   HealthPriority,
@@ -11,6 +11,7 @@ import {
   DoctorSummary,
   CoachMessage,
   Biomarker,
+  ConnectedDevice,
 } from "@/types/health";
 import {
   initialSarahProfile,
@@ -22,7 +23,9 @@ import {
   initialCoachMessages,
   initialDoctorSummary,
   sampleTimelineEvents,
+  initialConnectedDevices,
 } from "@/data/mockHealthData";
+import { translations, Language, Translations } from "@/data/translations";
 
 interface HealthContextType {
   user: UserProfile;
@@ -34,17 +37,23 @@ interface HealthContextType {
   coachMessages: CoachMessage[];
   doctorSummary: DoctorSummary;
   timelineEvents: typeof sampleTimelineEvents;
+  connectedDevices: ConnectedDevice[];
+  isSyncingAll: boolean;
+  selectedBiomarker: Biomarker | null;
+  setSelectedBiomarker: (bio: Biomarker | null) => void;
   activeTab: string;
   setActiveTab: (tab: string) => void;
-  language: "en" | "es" | "fr";
-  setLanguage: (lang: "en" | "es" | "fr") => void;
+  language: Language;
+  setLanguage: (lang: Language) => void;
+  t: Translations;
   unitSystem: "metric" | "imperial";
   toggleUnitSystem: () => void;
   toggleTaskCompletion: (taskId: string) => void;
   skipTask: (taskId: string, reason: string) => void;
   deferTask: (taskId: string) => void;
   addNewTask: (task: Omit<DailyTask, "id" | "completed" | "status">) => void;
-  sendCoachMessage: (text: string) => void;
+  sendCoachMessage: (text: string) => Promise<void>;
+  isCoachThinking: boolean;
   uploadLabReport: (reportName: string, biomarkers?: Partial<Biomarker>[]) => void;
   updateUserProfile: (updates: Partial<UserProfile>) => void;
   resetToDemoUser: () => void;
@@ -52,9 +61,16 @@ interface HealthContextType {
   setIsOnboardingOpen: (open: boolean) => void;
   emergencyAlert: string | null;
   dismissEmergencyAlert: () => void;
+  connectDevice: (deviceId: string) => void;
+  disconnectDevice: (deviceId: string) => void;
+  syncDevice: (deviceId: string) => Promise<void>;
+  syncAllDevices: () => Promise<void>;
+  addDoctorQuestion: (question: string) => void;
 }
 
 const HealthContext = createContext<HealthContextType | undefined>(undefined);
+
+const STORAGE_KEY = "norya_state_v2";
 
 export const HealthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserProfile>(initialSarahProfile);
@@ -66,11 +82,62 @@ export const HealthProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [coachMessages, setCoachMessages] = useState<CoachMessage[]>(initialCoachMessages);
   const [doctorSummary, setDoctorSummary] = useState<DoctorSummary>(initialDoctorSummary);
   const [timelineEvents, setTimelineEvents] = useState(sampleTimelineEvents);
+  const [connectedDevices, setConnectedDevices] = useState<ConnectedDevice[]>(initialConnectedDevices);
+  const [isSyncingAll, setIsSyncingAll] = useState<boolean>(false);
+  const [selectedBiomarker, setSelectedBiomarker] = useState<Biomarker | null>(null);
   const [activeTab, setActiveTab] = useState<string>("home");
-  const [language, setLanguage] = useState<"en" | "es" | "fr">("en");
+  const [language, setLanguage] = useState<Language>("en");
   const [unitSystem, setUnitSystem] = useState<"metric" | "imperial">("metric");
   const [isOnboardingOpen, setIsOnboardingOpen] = useState<boolean>(false);
   const [emergencyAlert, setEmergencyAlert] = useState<string | null>(null);
+  const [isCoachThinking, setIsCoachThinking] = useState<boolean>(false);
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    try {
+      if (typeof window !== "undefined") {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed.user) setUser(parsed.user);
+          if (parsed.priorities) setPriorities(parsed.priorities);
+          if (parsed.dailyTasks) setDailyTasks(parsed.dailyTasks);
+          if (parsed.labReports) setLabReports(parsed.labReports);
+          if (parsed.coachMessages) setCoachMessages(parsed.coachMessages);
+          if (parsed.connectedDevices) setConnectedDevices(parsed.connectedDevices);
+          if (parsed.doctorSummary) setDoctorSummary(parsed.doctorSummary);
+          if (parsed.language) setLanguage(parsed.language);
+          if (parsed.unitSystem) setUnitSystem(parsed.unitSystem);
+        }
+      }
+    } catch (e) {
+      console.error("Failed to load local storage state:", e);
+    }
+  }, []);
+
+  // Save to localStorage whenever critical state changes
+  useEffect(() => {
+    try {
+      if (typeof window !== "undefined") {
+        const stateToSave = {
+          user,
+          priorities,
+          dailyTasks,
+          labReports,
+          coachMessages,
+          connectedDevices,
+          doctorSummary,
+          language,
+          unitSystem,
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
+      }
+    } catch (e) {
+      console.error("Failed to save local storage state:", e);
+    }
+  }, [user, priorities, dailyTasks, labReports, coachMessages, connectedDevices, doctorSummary, language, unitSystem]);
+
+  const t = translations[language] || translations.en;
 
   const toggleUnitSystem = () => {
     setUnitSystem((prev) => (prev === "metric" ? "imperial" : "metric"));
@@ -118,6 +185,14 @@ export const HealthProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setUser((prev) => ({ ...prev, ...updates }));
   };
 
+  const addDoctorQuestion = (question: string) => {
+    if (!question.trim()) return;
+    setDoctorSummary((prev) => ({
+      ...prev,
+      suggestedQuestionsToDiscuss: [...prev.suggestedQuestionsToDiscuss, question.trim()],
+    }));
+  };
+
   const resetToDemoUser = () => {
     setUser(initialSarahProfile);
     setPriorities(initialPriorities);
@@ -128,9 +203,74 @@ export const HealthProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setCoachMessages(initialCoachMessages);
     setDoctorSummary(initialDoctorSummary);
     setTimelineEvents(sampleTimelineEvents);
+    setConnectedDevices(initialConnectedDevices);
+    if (typeof window !== "undefined") {
+      localStorage.removeItem(STORAGE_KEY);
+    }
   };
 
   const dismissEmergencyAlert = () => setEmergencyAlert(null);
+
+  const connectDevice = (deviceId: string) => {
+    setConnectedDevices((prev) =>
+      prev.map((d) => (d.id === deviceId ? { ...d, status: "connected", lastSync: "Just now" } : d))
+    );
+    setTimelineEvents((prev) => [
+      {
+        id: `tl-dev-${Date.now()}`,
+        date: "Today",
+        category: "metrics",
+        title: `Hardware Connected`,
+        description: `Successfully linked telemetry feed for ${deviceId}.`,
+        status: "positive",
+      },
+      ...prev,
+    ]);
+  };
+
+  const disconnectDevice = (deviceId: string) => {
+    setConnectedDevices((prev) =>
+      prev.map((d) => (d.id === deviceId ? { ...d, status: "disconnected" } : d))
+    );
+  };
+
+  const syncDevice = async (deviceId: string) => {
+    setConnectedDevices((prev) =>
+      prev.map((d) => (d.id === deviceId ? { ...d, status: "syncing" } : d))
+    );
+
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    setConnectedDevices((prev) =>
+      prev.map((d) => (d.id === deviceId ? { ...d, status: "connected", lastSync: "Just now" } : d))
+    );
+  };
+
+  const syncAllDevices = async () => {
+    setIsSyncingAll(true);
+    setConnectedDevices((prev) =>
+      prev.map((d) => (d.status === "connected" ? { ...d, status: "syncing" } : d))
+    );
+
+    await new Promise((resolve) => setTimeout(resolve, 1400));
+
+    setConnectedDevices((prev) =>
+      prev.map((d) => (d.status === "syncing" ? { ...d, status: "connected", lastSync: "Just now" } : d))
+    );
+    setIsSyncingAll(false);
+
+    setTimelineEvents((prev) => [
+      {
+        id: `tl-sync-${Date.now()}`,
+        date: "Today",
+        category: "metrics",
+        title: "All Health Sources Synchronized",
+        description: "Wearables, smart scale, and BP cuff feeds consolidated.",
+        status: "positive",
+      },
+      ...prev,
+    ]);
+  };
 
   const uploadLabReport = (reportName: string, customBiomarkers?: Partial<Biomarker>[]) => {
     const newReport: LabReport = {
@@ -171,7 +311,7 @@ export const HealthProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     ]);
   };
 
-  const sendCoachMessage = (text: string) => {
+  const sendCoachMessage = async (text: string) => {
     const userMsg: CoachMessage = {
       id: `msg-${Date.now()}`,
       sender: "user",
@@ -180,8 +320,50 @@ export const HealthProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     };
 
     setCoachMessages((prev) => [...prev, userMsg]);
+    setIsCoachThinking(true);
 
-    // Contextual AI Intelligence logic
+    try {
+      // Attempt serverless /api/coach route call
+      const res = await fetch("/api/coach", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: text,
+          userProfile: user,
+          biomarkers: labReports[0]?.biomarkers,
+          language,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const botMsg: CoachMessage = {
+          id: `msg-${Date.now() + 1}`,
+          sender: "norya",
+          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          text: data.text,
+          recommendations: data.recommendations,
+          contextMetrics: data.contextMetrics,
+          suggestedActions: data.suggestedActions,
+          safetyMode: data.safetyMode || "wellness",
+          emergencyHelpline: data.emergencyHelpline,
+        };
+
+        setCoachMessages((prev) => [...prev, botMsg]);
+
+        if (data.safetyMode === "urgent_emergency") {
+          setEmergencyAlert(
+            `Urgent Clinical Warning: Your message mentioned symptoms requiring immediate emergency medical evaluation. In Spain / Europe: Call 112. In Morocco: Call 15 (SAMU).`
+          );
+        }
+        setIsCoachThinking(false);
+        return;
+      }
+    } catch (e) {
+      console.warn("Falling back to local clinical context evaluation", e);
+    }
+
+    // Local deterministic clinical fallback
     setTimeout(() => {
       const lower = text.toLowerCase();
       let responseText = "";
@@ -189,87 +371,20 @@ export const HealthProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       let contextMetrics: CoachMessage["contextMetrics"] = undefined;
       let suggestedActions: CoachMessage["suggestedActions"] = undefined;
       let safetyMode: CoachMessage["safetyMode"] = "wellness";
-      let emergencyHelpline: string | undefined = undefined;
 
-      // 1. Red Flag / Emergency Detection
-      if (
-        lower.includes("chest pain") ||
-        lower.includes("shortness of breath") ||
-        lower.includes("numbness") ||
-        lower.includes("fainting") ||
-        lower.includes("stroke")
-      ) {
+      if (lower.includes("chest pain") || lower.includes("shortness of breath") || lower.includes("dolor en el pecho")) {
         safetyMode = "urgent_emergency";
-        emergencyHelpline = user.country === "Morocco" ? "SAMU 15 / Police 19" : "Europe Emergency: 112";
-        setEmergencyAlert(
-          `Urgent Clinical Warning: Your message mentioned symptoms (${text}) that require immediate emergency evaluation. Norya is an educational wellness OS, not emergency care. Please contact ${emergencyHelpline} or go to the nearest emergency department immediately.`
-        );
-        responseText = `⚠️ **URGENT SAFETY PROTOCOL ACTIVATED**\n\nSymptoms such as chest discomfort, severe shortness of breath, sudden numbness, or loss of consciousness may signal an acute cardiovascular or neurological emergency.\n\n**Do not wait, monitor, or attempt lifestyle interventions.**\n\n• In Spain / Europe: Call **112**\n• In Morocco: Call **15** (SAMU) or **141**\n• Go directly to the nearest hospital emergency room.`;
-      }
-      // 2. Medication alteration attempt
-      else if (
-        lower.includes("stop taking") ||
-        lower.includes("change my dose") ||
-        lower.includes("start taking statin") ||
-        lower.includes("blood pressure medication")
-      ) {
-        safetyMode = "clinician_recommended";
-        responseText = `I cannot recommend altering, starting, or discontinuing prescription medication. Such decisions require comprehensive clinical assessment with your prescribing physician.\n\nHowever, I can prepare a structured summary of your home blood pressure logs (average 134/84 mmHg) and ApoB readings so you can review them collaboratively with your doctor.`;
-        suggestedActions = [
-          { label: "Generate Doctor Appointment Summary", actionId: "open_doctor_summary" },
-        ];
-      }
-      // 3. "Why am I tired today?"
-      else if (lower.includes("tired") || lower.includes("fatigue") || lower.includes("sleep")) {
-        responseText = `Your recent sleep data reveals why you feel fatigued: you averaged 5h 54m over the past 3 nights, compared with your stable 7h 02m baseline. In addition, your resting heart rate is elevated by 5 bpm above baseline.\n\nInstead of a high-stress workout that could spike systemic cortisol, today is ideally suited to active recovery.`;
+        setEmergencyAlert("Urgent Clinical Warning: Acute cardiovascular symptoms detected. Call 112 or 15 immediately.");
+        responseText = `⚠️ **URGENT CLINICAL WARNING**\n\nSymptoms such as chest discomfort or shortness of breath require immediate medical evaluation. Please call **112** (Spain/Europe) or **15** (Morocco SAMU) right now.`;
+      } else if (lower.includes("tired") || lower.includes("fatigue") || lower.includes("sleep")) {
+        responseText = `Your recent 3-night sleep average (5h 54m) is below your 7h 02m baseline, and resting heart rate is up 5 bpm. Opt for active recovery and lights out by 22:15 tonight.`;
         contextMetrics = [
           { label: "3-Night Sleep Avg", value: "5h 54m (Target: 7h+)", status: "warning" },
-          { label: "Resting Heart Rate", value: "72 bpm (+5 bpm)", status: "warning" },
+          { label: "Resting HR", value: "72 bpm (+5 bpm)", status: "warning" },
         ];
-        recommendations = [
-          "Choose a gentle 35-minute outdoor walk rather than strenuous exercise",
-          "Ensure adequate hydration (500ml water + pinch of salt/electrolytes)",
-          "Aim for lights-out by 22:15 tonight to begin sleep debt payback",
-        ];
-        suggestedActions = [
-          { label: "Switch today's plan to Recovery", actionId: "switch_recovery" },
-        ];
-      }
-      // 4. "Should I buy a CGM?" or "supplements"
-      else if (lower.includes("cgm") || lower.includes("glucose monitor") || lower.includes("supplement")) {
-        responseText = `**Not recommended right now.**\n\nYour top three priorities are blood pressure reduction, cardiorespiratory movement, and steady weight loss. A continuous glucose monitor (€70–€100/mo) or expensive longevity supplements will not change those priorities. Your HbA1c is already improving (5.7% from 5.9%), and your €${user.healthBudgetMonthlyEur}/mo health budget is far better allocated toward a validated home blood pressure cuff, quality groceries, or comfortable walking shoes.`;
-        recommendations = [
-          "Focus on proven fundamentals: 7,000 steps daily",
-          "Maintain your 120g daily protein anchor",
-          "Ignore biohacking theater and high-cost gadgets",
-        ];
-      }
-      // 5. "Explain my blood test" / "ApoB"
-      else if (lower.includes("blood test") || lower.includes("apob") || lower.includes("cholesterol") || lower.includes("lab")) {
-        safetyMode = "health_info";
-        responseText = `Here is the science behind your recent panel:\n\n• **ApoB (105 mg/dL)**: Apolipoprotein B measures the exact number of atherogenic cholesterol-carrying particles. Because your father had coronary artery disease at 62, managing particle count (<80-90 mg/dL) is more protective than watching standard total cholesterol alone.\n• **HbA1c (5.7%)**: Down from 5.9%, indicating that your 3.7 kg weight reduction has already improved cellular insulin sensitivity.\n• **Kidneys & Liver**: eGFR (94) and Triglycerides (142 mg/dL) are optimal.`;
-        contextMetrics = [
-          { label: "ApoB", value: "105 mg/dL (Target <90)", status: "warning" },
-          { label: "HbA1c", value: "5.7% (Improved)", status: "normal" },
-          { label: "Triglycerides", value: "142 mg/dL (Normal)", status: "normal" },
-        ];
-        suggestedActions = [
-          { label: "View Complete Lab Extraction", actionId: "view_labs" },
-          { label: "Prepare Questions for Doctor", actionId: "open_doctor_summary" },
-        ];
-      }
-      // 6. "What should I focus on this week?"
-      else if (lower.includes("focus") || lower.includes("priority") || lower.includes("plan")) {
-        responseText = `For this week, ignore all distractions and execute on your **Top 3 Priorities**:\n\n1. **Blood Pressure Protocol**: Complete your 7-day AM/PM log (currently Day 3). This provides clinical-grade data for your next check-up.\n2. **Movement Anchor**: Hit 7,000 daily steps. A 35-minute brisk walk covers almost half of this target.\n3. **Metabolic Consistency**: Sustain your 120g protein target to support muscle maintenance while your weight drops smoothly.`;
-        recommendations = [
-          "Complete morning and evening BP checks",
-          "Take an afternoon brisk walk",
-          "Consolidate hydration and protein",
-        ];
-      }
-      // 7. General inquiry
-      else {
-        responseText = `Understood. Looking across your health context (Weight: ${user.weightKg} kg, BP: ${user.bloodPressureSystolic}/${user.bloodPressureDiastolic} mmHg, Avg steps: ${user.averageSteps}), the most impactful lever remains steady cardiovascular habit consistency rather than complex interventions.\n\nHow else can I assist with your plan or lab results today?`;
+        recommendations = ["Gentle 35-min walk", "Hydrate with pinch of salt", "Lights out by 22:15"];
+      } else {
+        responseText = `Understood. Looking at your biomarkers (ApoB 105 mg/dL, BP 134/84 mmHg), daily cardiovascular habit consistency remains your most protective lever.`;
       }
 
       const botMsg: CoachMessage = {
@@ -277,14 +392,14 @@ export const HealthProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         sender: "norya",
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         text: responseText,
-        recommendations: recommendations.length > 0 ? recommendations : undefined,
+        recommendations,
         contextMetrics,
         suggestedActions,
         safetyMode,
-        emergencyHelpline,
       };
 
       setCoachMessages((prev) => [...prev, botMsg]);
+      setIsCoachThinking(false);
     }, 600);
   };
 
@@ -300,10 +415,15 @@ export const HealthProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         coachMessages,
         doctorSummary,
         timelineEvents,
+        connectedDevices,
+        isSyncingAll,
+        selectedBiomarker,
+        setSelectedBiomarker,
         activeTab,
         setActiveTab,
         language,
         setLanguage,
+        t,
         unitSystem,
         toggleUnitSystem,
         toggleTaskCompletion,
@@ -311,6 +431,7 @@ export const HealthProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         deferTask,
         addNewTask,
         sendCoachMessage,
+        isCoachThinking,
         uploadLabReport,
         updateUserProfile,
         resetToDemoUser,
@@ -318,6 +439,11 @@ export const HealthProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setIsOnboardingOpen,
         emergencyAlert,
         dismissEmergencyAlert,
+        connectDevice,
+        disconnectDevice,
+        syncDevice,
+        syncAllDevices,
+        addDoctorQuestion,
       }}
     >
       {children}

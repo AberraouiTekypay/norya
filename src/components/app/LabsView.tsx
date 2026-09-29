@@ -18,8 +18,7 @@ import {
 } from "lucide-react";
 
 export const LabsView: React.FC = () => {
-  const { labReports, uploadLabReport, setActiveTab } = useHealth();
-  const [selectedBiomarker, setSelectedBiomarker] = useState<Biomarker | null>(null);
+  const { labReports, uploadLabReport, setActiveTab, setSelectedBiomarker } = useHealth();
   const [unitMode, setUnitMode] = useState<"standard" | "si">("standard"); // mg/dL vs mmol/L
   const [isUploading, setIsUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
@@ -189,76 +188,6 @@ export const LabsView: React.FC = () => {
                   </div>
                 );
               })}
-            </div>
-          </div>
-
-        </div>
-      )}
-
-      {/* Modal: Deep Biomarker Explanation */}
-      {selectedBiomarker && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl space-y-5 animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between pb-3 border-b border-[#0F172A]/5">
-              <div>
-                <div className="text-[10px] font-mono uppercase text-[#64748B]">
-                  Biomarker Deep Dive
-                </div>
-                <h3 className="text-lg font-bold text-[#0F172A]">
-                  {selectedBiomarker.displayName} ({selectedBiomarker.canonicalName})
-                </h3>
-              </div>
-              <button
-                onClick={() => setSelectedBiomarker(null)}
-                className="text-[#64748B] hover:text-[#0F172A]"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="flex items-center justify-between p-3.5 rounded-2xl bg-[#FAFAF8] border border-[#0F172A]/5">
-              <div>
-                <div className="text-[10px] uppercase text-[#64748B] font-bold">Your Result</div>
-                <div className="text-xl font-bold text-[#0F172A] font-mono">
-                  {selectedBiomarker.value} {selectedBiomarker.unit}
-                </div>
-              </div>
-              <div>
-                <div className="text-[10px] uppercase text-[#64748B] font-bold">Reference Range</div>
-                <div className="text-sm font-semibold text-[#64748B] font-mono">
-                  {selectedBiomarker.referenceLow}–{selectedBiomarker.referenceHigh} {selectedBiomarker.unit}
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-1 text-xs text-[#0F172A] leading-relaxed">
-              <h4 className="font-bold text-[#0F172A] uppercase tracking-wider text-[10px]">
-                What this marker represents:
-              </h4>
-              <p>{selectedBiomarker.explanation}</p>
-            </div>
-
-            {selectedBiomarker.doctorQuestions && selectedBiomarker.doctorQuestions.length > 0 && (
-              <div className="p-3.5 rounded-2xl bg-[#CCFBF1]/30 border border-[#14B8A6]/20 space-y-1 text-xs text-[#0F766E]">
-                <span className="font-bold uppercase tracking-wider text-[10px]">
-                  Suggested Questions for Your Clinician:
-                </span>
-                <ul className="space-y-1">
-                  {selectedBiomarker.doctorQuestions.map((q, qIdx) => (
-                    <li key={qIdx}>• {q}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            <div className="pt-2 flex justify-between items-center text-xs">
-              <span className="text-[#64748B] text-[11px]">Educational guidance only.</span>
-              <button
-                onClick={() => setSelectedBiomarker(null)}
-                className="px-5 py-2 rounded-xl bg-[#0F172A] text-white font-semibold hover:bg-[#1E293B]"
-              >
-                Close
-              </button>
             </div>
           </div>
         </div>

@@ -43,6 +43,11 @@ export const metadata: Metadata = {
     description:
       "A science-first personal health operating system. Connect your phone, wearables, and blood tests.",
   },
+  manifest: "/manifest.json",
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({

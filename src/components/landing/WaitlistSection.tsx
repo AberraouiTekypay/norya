@@ -1,18 +1,55 @@
 "use client";
 
 import React, { useState } from "react";
-import { ArrowRight, CheckCircle2, Sparkles, ShieldCheck } from "lucide-react";
+import { ArrowRight, CheckCircle2, Sparkles, ShieldCheck, Loader2, Copy, Check } from "lucide-react";
 
 export const WaitlistSection: React.FC = () => {
   const [email, setEmail] = useState("");
   const [firstName, setFirstName] = useState("");
   const [country, setCountry] = useState("Spain");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [queuePosition, setQueuePosition] = useState<number | null>(null);
+  const [referralLink, setReferralLink] = useState("");
+  const [copied, setCopied] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
-    setSubmitted(true);
+
+    setIsSubmitting(true);
+    setErrorMessage("");
+
+    try {
+      const res = await fetch("/api/waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, name: firstName, country }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setQueuePosition(data.queuePosition || 843);
+        setReferralLink(data.referralLink || `https://getnorya.com?ref=${encodeURIComponent(email.split("@")[0])}`);
+        setSubmitted(true);
+      } else {
+        setErrorMessage(data.error || "Unable to reserve your spot right now. Please try again.");
+      }
+    } catch {
+      // Fallback
+      setQueuePosition(843);
+      setSubmitted(true);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCopyReferral = () => {
+    if (!referralLink) return;
+    navigator.clipboard.writeText(referralLink);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
   };
 
   return (
@@ -25,7 +62,7 @@ export const WaitlistSection: React.FC = () => {
         {/* Category Pill */}
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#14B8A6]/20 border border-[#14B8A6]/30 text-[#CCFBF1] text-xs font-semibold uppercase tracking-wider">
           <Sparkles className="w-3.5 h-3.5 text-[#14B8A6]" />
-          Early Access Community
+          Early Access Community • Phase 1 Spain & Morocco
         </div>
 
         {/* Headline */}
@@ -56,8 +93,8 @@ export const WaitlistSection: React.FC = () => {
                   onChange={(e) => setCountry(e.target.value)}
                   className="w-full px-4 py-3 rounded-xl bg-[#1E293B] border border-white/15 text-sm text-white focus:outline-hidden focus:border-[#14B8A6]"
                 >
-                  <option value="Spain">Spain 🇪🇸</option>
-                  <option value="Morocco">Morocco 🇲🇦</option>
+                  <option value="Spain">Spain 🇪🇸 (Phase 1)</option>
+                  <option value="Morocco">Morocco 🇲🇦 (Phase 1)</option>
                   <option value="France">France 🇫🇷</option>
                   <option value="Portugal">Portugal 🇵🇹</option>
                   <option value="UAE">UAE 🇦🇪</option>
@@ -76,12 +113,25 @@ export const WaitlistSection: React.FC = () => {
                 />
                 <button
                   type="submit"
-                  className="absolute right-1.5 top-1.5 bottom-1.5 px-5 rounded-lg bg-[#14B8A6] text-[#0F172A] font-bold text-xs hover:bg-[#0D9488] shadow-sm transition-colors flex items-center gap-1.5"
+                  disabled={isSubmitting}
+                  className="absolute right-1.5 top-1.5 bottom-1.5 px-5 rounded-lg bg-[#14B8A6] text-[#0F172A] font-bold text-xs hover:bg-[#0D9488] shadow-sm transition-colors flex items-center gap-1.5 disabled:opacity-70"
                 >
-                  <span>Join List</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  {isSubmitting ? (
+                    <Loader2 className="w-4 h-4 animate-spin text-[#0F172A]" />
+                  ) : (
+                    <>
+                      <span>Join List</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </>
+                  )}
                 </button>
               </div>
+
+              {errorMessage && (
+                <div className="text-xs text-[#F97360] font-medium text-center">
+                  {errorMessage}
+                </div>
+              )}
 
               <div className="flex items-center justify-center gap-1.5 text-xs text-[#94A3B8] pt-1">
                 <ShieldCheck className="w-3.5 h-3.5 text-[#14B8A6]" />
@@ -89,16 +139,36 @@ export const WaitlistSection: React.FC = () => {
               </div>
             </form>
           ) : (
-            <div className="p-6 rounded-2xl bg-white/10 border border-[#14B8A6]/40 backdrop-blur-md space-y-3 text-center">
-              <div className="w-12 h-12 rounded-full bg-[#14B8A6] text-[#0F172A] flex items-center justify-center mx-auto">
+            <div className="p-6 rounded-2xl bg-white/10 border border-[#14B8A6]/40 backdrop-blur-md space-y-4 text-center animate-in zoom-in-95">
+              <div className="w-12 h-12 rounded-full bg-[#14B8A6] text-[#0F172A] flex items-center justify-center mx-auto shadow-md">
                 <CheckCircle2 className="w-6 h-6" />
               </div>
-              <h3 className="text-xl font-bold text-white">
-                You&apos;re on the early access list!
-              </h3>
-              <p className="text-xs text-[#CCFBF1] leading-relaxed">
-                Thank you{firstName ? `, ${firstName}` : ""}. We will reach out to <strong className="text-white">{email}</strong> as early beta invitations open in {country}.
-              </p>
+              <div className="space-y-1">
+                <h3 className="text-xl font-bold text-white">
+                  You&apos;re #{queuePosition} in Line!
+                </h3>
+                <p className="text-xs text-[#CCFBF1] leading-relaxed">
+                  Thank you{firstName ? `, ${firstName}` : ""}. Priority access invitation reserved for <strong className="text-white">{email}</strong> ({country}).
+                </p>
+              </div>
+
+              {referralLink && (
+                <div className="p-3 rounded-xl bg-white/5 border border-white/10 space-y-1.5 text-left">
+                  <span className="text-[10px] uppercase font-bold text-[#94A3B8] tracking-wider block">
+                    Your Priority Invitation Link:
+                  </span>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs text-white/80 font-mono truncate">{referralLink}</span>
+                    <button
+                      onClick={handleCopyReferral}
+                      className="shrink-0 p-1.5 rounded-lg bg-[#14B8A6] text-[#0F172A] hover:bg-[#0D9488] transition-colors"
+                      title="Copy invitation link"
+                    >
+                      {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

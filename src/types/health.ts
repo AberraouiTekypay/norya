@@ -37,6 +37,11 @@ export interface DailyTask {
   impactNote?: string;
 }
 
+export interface BiomarkerHistoryPoint {
+  date: string;
+  value: number;
+}
+
 export interface Biomarker {
   id: string;
   canonicalName: string;
@@ -47,6 +52,8 @@ export interface Biomarker {
   normalizedUnit?: string;
   referenceLow: number;
   referenceHigh: number;
+  optimalLow?: number;
+  optimalHigh?: number;
   status: "optimal" | "borderline" | "elevated" | "low";
   date: string;
   previousValue?: number;
@@ -54,6 +61,14 @@ export interface Biomarker {
   category: HealthDomainType;
   explanation: string;
   doctorQuestions: string[];
+  historyPoints?: BiomarkerHistoryPoint[];
+  evidenceGrade?: EvidenceGrade;
+  keyInterventions?: {
+    nutrition?: string;
+    movement?: string;
+    sleep?: string;
+    clinical?: string;
+  };
 }
 
 export interface LabReport {
@@ -154,4 +169,16 @@ export interface UserProfile {
   medications: string[];
   familyHistory: string[];
   isDemoUser: boolean;
+}
+
+export interface ConnectedDevice {
+  id: string;
+  name: string;
+  brand: string;
+  category: "watch" | "ring" | "band" | "scale" | "cgm" | "bp_cuff";
+  status: "connected" | "disconnected" | "syncing";
+  lastSync: string;
+  metricsProvided: string[];
+  batteryPercent?: number;
+  syncFrequency: "realtime" | "hourly" | "daily";
 }

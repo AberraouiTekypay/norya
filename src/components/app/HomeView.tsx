@@ -17,6 +17,8 @@ import {
   Plus,
   Stethoscope,
   Info,
+  Watch,
+  RotateCw,
 } from "lucide-react";
 
 export const HomeView: React.FC = () => {
@@ -30,6 +32,12 @@ export const HomeView: React.FC = () => {
     setActiveTab,
     sendCoachMessage,
     unitSystem,
+    connectedDevices,
+    syncAllDevices,
+    isSyncingAll,
+    setSelectedBiomarker,
+    labReports,
+    t,
   } = useHealth();
 
   const [expandedPriority, setExpandedPriority] = useState<string | null>("p1");
@@ -92,6 +100,63 @@ export const HomeView: React.FC = () => {
             title="View Score Details"
           >
             <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Hardware Telemetry Snapshot */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="p-4 rounded-2xl bg-white border border-[#0F172A]/8 shadow-soft flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#CCFBF1] text-[#0F766E] flex items-center justify-center shrink-0">
+              <Watch className="w-5 h-5 text-[#14B8A6]" />
+            </div>
+            <div>
+              <div className="text-xs font-bold text-[#0F172A]">
+                {connectedDevices.filter((d) => d.status === "connected").length} Hardware Feeds Synced
+              </div>
+              <div className="text-[11px] text-[#64748B]">
+                Apple Health, Withings, Oura Ring, Omron Cuff
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={syncAllDevices}
+              disabled={isSyncingAll}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#FAFAF8] border border-[#0F172A]/8 text-[11px] font-semibold text-[#0F172A] hover:bg-[#F1F5F9] transition-all disabled:opacity-50"
+            >
+              <RotateCw className={`w-3 h-3 text-[#14B8A6] ${isSyncingAll ? "animate-spin" : ""}`} />
+              <span>{isSyncingAll ? "Syncing..." : "Sync All"}</span>
+            </button>
+            <button
+              onClick={() => setActiveTab("devices")}
+              className="text-[11px] font-semibold text-[#0F766E] hover:underline"
+            >
+              Manage →
+            </button>
+          </div>
+        </div>
+
+        <div className="p-4 rounded-2xl bg-white border border-[#0F172A]/8 shadow-soft flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#14B8A6]/10 text-[#0F766E] flex items-center justify-center shrink-0 font-bold font-mono text-sm">
+              BP
+            </div>
+            <div>
+              <div className="text-xs font-bold text-[#0F172A]">
+                Latest Home Reading: {user.bloodPressureSystolic}/{user.bloodPressureDiastolic} mmHg
+              </div>
+              <div className="text-[11px] text-[#64748B]">
+                Protocol Day 3 of 7 • Resting HR: {user.restingHeartRateBpm} bpm
+              </div>
+            </div>
+          </div>
+          <button
+            onClick={() => setActiveTab("labs")}
+            className="text-[11px] font-semibold text-[#0F766E] hover:underline"
+          >
+            Vitals Log →
           </button>
         </div>
       </div>
