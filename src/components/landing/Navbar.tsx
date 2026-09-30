@@ -26,16 +26,26 @@ export const Navbar: React.FC = () => {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
         {/* Brand Wordmark */}
-        <Link href="/" className="flex items-center gap-2 group">
-          <div className="w-8 h-8 rounded-lg bg-[#0F172A] flex items-center justify-center text-[#14B8A6] font-bold text-lg tracking-tight group-hover:scale-105 transition-transform">
-            N
-          </div>
-          <div className="flex flex-col">
-            <span className="text-xl font-semibold tracking-tight text-[#0F172A]">
-              Norya
-            </span>
-          </div>
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <div className="w-8 h-8 rounded-xl bg-[#0F172A] flex items-center justify-center text-[#14B8A6] font-bold text-lg tracking-tight group-hover:scale-105 transition-transform shadow-xs">
+              N
+            </div>
+            <div className="flex flex-col text-left">
+              <span className="text-xl font-bold tracking-tight text-[#0F172A] leading-none">
+                Norya
+              </span>
+              <a
+                href="https://em300.co"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[9px] uppercase font-mono tracking-widest text-[#64748B] hover:text-[#0F172A] transition-colors mt-0.5"
+              >
+                An EM300.co Company
+              </a>
+            </div>
+          </Link>
+        </div>
 
         {/* Desktop Navigation Links */}
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-[#64748B]">

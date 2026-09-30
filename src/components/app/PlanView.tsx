@@ -43,6 +43,7 @@ export const PlanView: React.FC = () => {
   const [showSundayReview, setShowSundayReview] = useState(false);
   const [reviewTab, setReviewTab] = useState<"compliance" | "vitals" | "adjustments">("compliance");
   const [reviewSavedToast, setReviewSavedToast] = useState(false);
+  const [activeSection, setActiveSection] = useState<"all" | "tasks" | "circadian" | "experiments">("all");
 
   const completedCount = dailyTasks.filter((t) => t.status === "completed").length;
   const adherenceRate = Math.round((completedCount / (dailyTasks.length || 1)) * 100);
@@ -126,96 +127,123 @@ export const PlanView: React.FC = () => {
         </div>
       </div>
 
+      {/* Plan Section Selector Tabs */}
+      <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-white border border-[#0F172A]/8 shadow-2xs overflow-x-auto text-xs font-semibold">
+        {[
+          { id: "all", label: "Overview (All)" },
+          { id: "tasks", label: `Today's Action Items (${completedCount}/${dailyTasks.length})` },
+          { id: "circadian", label: "Circadian Anchors (5)" },
+          { id: "experiments", label: `14-Day Experiments (${experiments.length})` },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveSection(tab.id as typeof activeSection)}
+            className={`px-4 py-2 rounded-xl transition-all whitespace-nowrap ${
+              activeSection === tab.id
+                ? "bg-[#0F172A] text-white shadow-xs font-bold"
+                : "text-[#64748B] hover:text-[#0F172A] hover:bg-[#F8FAFC]"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       {/* Daily Tasks List */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between text-xs font-semibold text-[#64748B] px-1">
-          <span>Today&apos;s Action Items ({dailyTasks.length} Max)</span>
-          <span className="text-[#16A34A]">{completedCount} of {dailyTasks.length} Done</span>
-        </div>
+      {(activeSection === "all" || activeSection === "tasks") && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between text-xs font-semibold text-[#64748B] px-1">
+            <span>Today&apos;s Action Items ({dailyTasks.length} Max)</span>
+            <span className="text-[#16A34A]">{completedCount} of {dailyTasks.length} Done</span>
+          </div>
 
-        <div className="space-y-2.5">
-          {dailyTasks.map((task) => {
-            const isDone = task.status === "completed";
-            const isSkipped = task.status === "skipped";
+          <div className="space-y-2.5">
+            {dailyTasks.map((task) => {
+              const isDone = task.status === "completed";
+              const isSkipped = task.status === "skipped";
 
-            return (
-              <div
-                key={task.id}
-                className={`p-4 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
-                  isDone
-                    ? "bg-[#FAFAF8] border-[#0F172A]/5 opacity-75"
-                    : isSkipped
-                    ? "bg-[#F1F5F9]/40 border-[#0F172A]/5 line-through opacity-50"
-                    : "bg-white border-[#0F172A]/8 shadow-xs hover:border-[#14B8A6]/40"
-                }`}
-              >
-                <div className="flex items-start gap-3">
-                  <button
-                    onClick={() => toggleTaskCompletion(task.id)}
-                    className="mt-0.5 text-[#14B8A6] hover:scale-110 transition-transform"
-                    aria-label={`Toggle ${task.title}`}
-                  >
-                    {isDone ? (
-                      <CheckCircle2 className="w-5 h-5 text-[#16A34A]" />
-                    ) : (
-                      <Circle className="w-5 h-5 text-[#64748B]/40 hover:text-[#14B8A6]" />
-                    )}
-                  </button>
+              return (
+                <div
+                  key={task.id}
+                  className={`p-4 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                    isDone
+                      ? "bg-[#FAFAF8] border-[#0F172A]/5 opacity-75"
+                      : isSkipped
+                      ? "bg-[#F1F5F9]/40 border-[#0F172A]/5 line-through opacity-50"
+                      : "bg-white border-[#0F172A]/8 shadow-xs hover:border-[#14B8A6]/40"
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <button
+                      onClick={() => toggleTaskCompletion(task.id)}
+                      className="mt-0.5 text-[#14B8A6] hover:scale-110 transition-transform"
+                      aria-label={`Toggle ${task.title}`}
+                    >
+                      {isDone ? (
+                        <CheckCircle2 className="w-5 h-5 text-[#16A34A]" />
+                      ) : (
+                        <Circle className="w-5 h-5 text-[#64748B]/40 hover:text-[#14B8A6]" />
+                      )}
+                    </button>
 
-                  <div className="space-y-0.5">
-                    <div className="flex items-center gap-2">
-                      <span className={`text-xs sm:text-sm font-semibold text-[#0F172A] ${isDone ? "line-through text-[#64748B]" : ""}`}>
-                        {task.title}
-                      </span>
-                      <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-[#F1F5F9] text-[#64748B]">
-                        {task.category}
-                      </span>
-                    </div>
-                    <div className="text-xs text-[#64748B]">
-                      Target: {task.target} {task.current ? `• Current: ${task.current}` : ""}
-                    </div>
-                    {task.impactNote && (
-                      <div className="text-[11px] text-[#0F766E] font-medium pt-0.5">
-                        💡 {task.impactNote}
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-2">
+                        <span className={`text-xs sm:text-sm font-semibold text-[#0F172A] ${isDone ? "line-through text-[#64748B]" : ""}`}>
+                          {task.title}
+                        </span>
+                        <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-[#F1F5F9] text-[#64748B]">
+                          {task.category}
+                        </span>
                       </div>
+                      <div className="text-xs text-[#64748B]">
+                        Target: {task.target} {task.current ? `• Current: ${task.current}` : ""}
+                      </div>
+                      {task.impactNote && (
+                        <div className="text-[11px] text-[#0F766E] font-medium pt-0.5">
+                          💡 {task.impactNote}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 self-end sm:self-center">
+                    {!isDone && (
+                      <>
+                        <button
+                          onClick={() => deferTask(task.id)}
+                          className="text-[11px] text-[#64748B] hover:text-[#0F172A] px-2.5 py-1 rounded-lg hover:bg-[#F1F5F9]"
+                        >
+                          Defer
+                        </button>
+                        <button
+                          onClick={() => skipTask(task.id, "Skipped by user")}
+                          className="text-[11px] text-[#64748B] hover:text-[#0F172A] px-2.5 py-1 rounded-lg hover:bg-[#F1F5F9]"
+                        >
+                          Skip
+                        </button>
+                      </>
+                    )}
+                    {isDone && (
+                      <span className="text-[11px] font-semibold text-[#16A34A] bg-[#16A34A]/10 px-2.5 py-1 rounded-lg">
+                        Completed
+                      </span>
                     )}
                   </div>
                 </div>
-
-                <div className="flex items-center gap-2 self-end sm:self-center">
-                  {!isDone && (
-                    <>
-                      <button
-                        onClick={() => deferTask(task.id)}
-                        className="text-[11px] text-[#64748B] hover:text-[#0F172A] px-2.5 py-1 rounded-lg hover:bg-[#F1F5F9]"
-                      >
-                        Defer
-                      </button>
-                      <button
-                        onClick={() => skipTask(task.id, "Skipped by user")}
-                        className="text-[11px] text-[#64748B] hover:text-[#0F172A] px-2.5 py-1 rounded-lg hover:bg-[#F1F5F9]"
-                      >
-                        Skip
-                      </button>
-                    </>
-                  )}
-                  {isDone && (
-                    <span className="text-[11px] font-semibold text-[#16A34A] bg-[#16A34A]/10 px-2.5 py-1 rounded-lg">
-                      Completed
-                    </span>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Circadian Habit Stacking Engine */}
-      <HabitTracker />
+      {(activeSection === "all" || activeSection === "circadian") && (
+        <HabitTracker />
+      )}
 
       {/* Personal Health Experiments */}
-      <div className="space-y-4 pt-4 border-t border-[#0F172A]/8">
+      {(activeSection === "all" || activeSection === "experiments") && (
+        <div className="space-y-4 pt-4 border-t border-[#0F172A]/8">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <FlaskConical className="w-5 h-5 text-[#14B8A6]" />
@@ -363,6 +391,7 @@ export const PlanView: React.FC = () => {
           })}
         </div>
       </div>
+      )}
 
       {/* Modal: Add Custom Action */}
       {showAddModal && (
