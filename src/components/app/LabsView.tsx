@@ -15,10 +15,12 @@ import {
   Sparkles,
   ArrowRight,
   Filter,
+  Clock,
 } from "lucide-react";
 
 export const LabsView: React.FC = () => {
-  const { labReports, uploadLabReport, setActiveTab, setSelectedBiomarker } = useHealth();
+  const { labReports, uploadLabReport, setActiveTab, setSelectedBiomarker, setIsPreLabModalOpen } =
+    useHealth();
   const [unitMode, setUnitMode] = useState<"standard" | "si">("standard"); // mg/dL vs mmol/L
   const [isUploading, setIsUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
@@ -90,13 +92,22 @@ export const LabsView: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => setIsPreLabModalOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#F0FDFA] border border-[#14B8A6]/30 text-xs font-semibold text-[#0F766E] hover:bg-[#CCFBF1] transition-colors shadow-2xs"
+          >
+            <Clock className="w-3.5 h-3.5 text-[#14B8A6]" />
+            <span>Pre-Lab Guide (48h)</span>
+          </button>
+
           <button
             onClick={() => setUnitMode(unitMode === "standard" ? "si" : "standard")}
             className="px-3 py-1.5 rounded-xl bg-white border border-[#0F172A]/10 text-xs font-semibold text-[#0F172A] hover:bg-[#FAFAF8] transition-colors"
           >
             Units: {unitMode === "standard" ? "Spain / US (mg/dL)" : "SI / Europe (mmol/L, g/L)"}
           </button>
+
           <button
             onClick={() => setActiveTab("doctor")}
             className="inline-flex items-center gap-1 px-3.5 py-1.5 rounded-xl bg-[#0F172A] text-white text-xs font-semibold hover:bg-[#1E293B] transition-colors shadow-2xs"

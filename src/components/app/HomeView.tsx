@@ -20,6 +20,8 @@ import {
   Watch,
   RotateCw,
   Utensils,
+  Database,
+  ShieldCheck,
 } from "lucide-react";
 
 export const HomeView: React.FC = () => {
@@ -40,6 +42,9 @@ export const HomeView: React.FC = () => {
     labReports,
     setIsBPModalOpen,
     setIsNutritionModalOpen,
+    setIsSupplementModalOpen,
+    setIsFhirModalOpen,
+    setIsPreLabModalOpen,
     t,
   } = useHealth();
 
@@ -162,6 +167,41 @@ export const HomeView: React.FC = () => {
             7-Day Protocol →
           </button>
         </div>
+      </div>
+
+      {/* Clinical Quick Launch */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+        <button
+          onClick={() => setIsPreLabModalOpen(true)}
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#F0FDFA] border border-[#14B8A6]/30 font-semibold text-[#0F766E] hover:bg-[#CCFBF1] transition-all whitespace-nowrap shadow-2xs"
+        >
+          <Clock className="w-3.5 h-3.5 text-[#14B8A6]" />
+          <span>Pre-Lab Fasting Guide (48h)</span>
+        </button>
+
+        <button
+          onClick={() => setIsFhirModalOpen(true)}
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-[#0F172A]/10 font-semibold text-[#0F172A] hover:bg-[#FAFAF8] transition-all whitespace-nowrap shadow-2xs"
+        >
+          <Database className="w-3.5 h-3.5 text-[#14B8A6]" />
+          <span>FHIR R4 Export</span>
+        </button>
+
+        <button
+          onClick={() => setIsSupplementModalOpen(true)}
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-[#0F172A]/10 font-semibold text-[#0F172A] hover:bg-[#FAFAF8] transition-all whitespace-nowrap shadow-2xs"
+        >
+          <ShieldCheck className="w-3.5 h-3.5 text-[#14B8A6]" />
+          <span>Supplement Auditor</span>
+        </button>
+
+        <button
+          onClick={() => setIsNutritionModalOpen(true)}
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-[#0F172A]/10 font-semibold text-[#0F172A] hover:bg-[#FAFAF8] transition-all whitespace-nowrap shadow-2xs"
+        >
+          <Utensils className="w-3.5 h-3.5 text-[#14B8A6]" />
+          <span>Meal Blueprint</span>
+        </button>
       </div>
 
       {/* 2. Top 3 Priorities (The Norya Core Engine) */}

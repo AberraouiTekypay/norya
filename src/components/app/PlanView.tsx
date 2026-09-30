@@ -17,6 +17,7 @@ import {
   Utensils,
   ShieldCheck,
 } from "lucide-react";
+import { HabitTracker } from "./HabitTracker";
 
 export const PlanView: React.FC = () => {
   const {
@@ -209,6 +210,9 @@ export const PlanView: React.FC = () => {
           })}
         </div>
       </div>
+
+      {/* Circadian Habit Stacking Engine */}
+      <HabitTracker />
 
       {/* Personal Health Experiments */}
       <div className="space-y-4 pt-4 border-t border-[#0F172A]/8">

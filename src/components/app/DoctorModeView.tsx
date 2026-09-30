@@ -6,11 +6,21 @@ import {
   Printer,
   Copy,
   Check,
+  Database,
 } from "lucide-react";
 
 export const DoctorModeView: React.FC = () => {
-  const { doctorSummary, user, familyMembers, activeFamilyMemberId, setActiveFamilyMemberId, addDoctorQuestion, bloodPressureLogs, score2Profile } =
-    useHealth();
+  const {
+    doctorSummary,
+    user,
+    familyMembers,
+    activeFamilyMemberId,
+    setActiveFamilyMemberId,
+    addDoctorQuestion,
+    bloodPressureLogs,
+    score2Profile,
+    setIsFhirModalOpen,
+  } = useHealth();
   const [copied, setCopied] = useState(false);
   const [customQuestion, setCustomQuestion] = useState("");
 
@@ -94,6 +104,14 @@ ${questionsList.map((q, idx) => `${idx + 1}. ${q}`).join("\n")}
 
         {/* Action Controls */}
         <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => setIsFhirModalOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#FAFAF8] border border-[#0F172A]/10 text-xs font-semibold text-[#0F172A] hover:bg-[#F1F5F9] shadow-2xs transition-colors"
+          >
+            <Database className="w-4 h-4 text-[#14B8A6]" />
+            <span>Export FHIR R4</span>
+          </button>
+
           <button
             onClick={handleCopy}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-[#0F172A]/10 text-xs font-semibold text-[#0F172A] hover:bg-[#FAFAF8] shadow-2xs transition-colors"

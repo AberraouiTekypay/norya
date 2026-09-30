@@ -13,6 +13,8 @@ import {
   FamilyMember,
   Score2RiskProfile,
   MealPlate,
+  CircadianHabit,
+  PreLabStep,
 } from "@/types/health";
 
 export const initialSarahProfile: UserProfile = {
@@ -1153,6 +1155,118 @@ export const initialScore2Profile: Score2RiskProfile = {
   targetRiskPercent: 2.1,
   relativeRiskReduction: 44.7,
 };
+
+export const initialCircadianHabits: CircadianHabit[] = [
+  {
+    id: "habit-1",
+    title: "Dawn Photoperiod & Electrolyte Hydration",
+    timeWindow: "07:00 - 08:00",
+    period: "morning",
+    biologicalTarget: "Cortisol awakening response (CAR) & suprachiasmatic nucleus (SCN) circadian sync",
+    action: "10-15 minutes of outdoor daylight exposure without sunglasses + 500ml water with pinch of unrefined sea salt.",
+    scienceNote: "Retinal melanopsin ganglion cells stimulate hypothalamic SCN, resetting the master circadian clock and timer for nocturnal melatonin synthesis.",
+    completed: true,
+    streakDays: 8,
+  },
+  {
+    id: "habit-2",
+    title: "Pre-Prandial Viscous Mucilage Preload",
+    timeWindow: "08:15 - 08:30",
+    period: "morning",
+    biologicalTarget: "Intestinal bile acid sequestration and glycemic absorption blunting",
+    action: "5g pure psyllium husk stirred in 250ml water, consumed 20-30 minutes before breakfast.",
+    scienceNote: "Creates an unstirred viscous gel layer in the jejunum, reducing rate of carbohydrate absorption and forcing hepatic LDL clearance.",
+    completed: true,
+    streakDays: 6,
+  },
+  {
+    id: "habit-3",
+    title: "Post-Prandial GLUT4 Skeletal Translocation Walk",
+    timeWindow: "13:30 - 14:00",
+    period: "noon",
+    biologicalTarget: "Non-insulin dependent muscular glucose disposal",
+    action: "10 to 15-minute brisk walk within 30 minutes of finishing lunch.",
+    scienceNote: "Contractile muscle activity triggers GLUT4 glucose transporter translocation to the cell membrane independently of insulin, attenuating glucose excursion by 30-40%.",
+    completed: false,
+    streakDays: 4,
+  },
+  {
+    id: "habit-4",
+    title: "Zone 2 Mitochondrial Biogenesis Session",
+    timeWindow: "17:30 - 18:30",
+    period: "afternoon",
+    biologicalTarget: "Mitochondrial volume density & lipid substrate oxidation",
+    action: "35-40 minutes of conversational brisk incline walking or light stationary cycling (HR 115-128 bpm).",
+    scienceNote: "Maximizes fat oxidation rate (FATmax) while keeping blood lactate under 2.0 mmol/L, stimulating PGC-1alpha mitochondrial proliferation.",
+    completed: false,
+    streakDays: 3,
+  },
+  {
+    id: "habit-5",
+    title: "Melatonin Shielding & Neurochemical Wind-Down",
+    timeWindow: "21:30 - 22:30",
+    period: "evening",
+    biologicalTarget: "Pineal melatonin release & autonomic parasympathetic vagal tone",
+    action: "Screens in dark/amber mode or off 60 min before bed; 300mg elemental Magnesium Bisglycinate with warm herbal infusion.",
+    scienceNote: "Minimizes short-wavelength 460-480nm photon suppression of melatonin; magnesium acts as an NMDA receptor antagonist to promote slow-wave delta sleep.",
+    completed: false,
+    streakDays: 7,
+  },
+];
+
+export const initialPreLabSteps: PreLabStep[] = [
+  {
+    id: "prelab-1",
+    hoursBefore: 48,
+    timeLabel: "48 Hours Prior",
+    title: "Cease Biotin (Vitamin B7) & Multi-B Complexes",
+    instruction: "Pause any supplement containing biotin (>1,000 mcg / 1 mg) 48 hours before testing.",
+    rationale: "Most modern clinical immunoassays (Echevarne, Cerba, Quest) utilize streptavidin-biotin capture technology. Free circulating biotin causes significant false-low troponin and false-high/low thyroid (TSH, fT4) and sex hormone readings.",
+    checked: true,
+    criticality: "critical",
+  },
+  {
+    id: "prelab-2",
+    hoursBefore: 24,
+    timeLabel: "24 Hours Prior",
+    title: "Exercise Modulation (Avoid Heavy Eccentric & HIIT)",
+    instruction: "Stick to gentle walking; avoid heavy squats, deadlifts, distance running, or high-intensity interval training.",
+    rationale: "Eccentric micro-tears in muscle fibers cause transient 24-48h surges in high-sensitivity C-reactive protein (hs-CRP), creatine kinase (CK), and hepatic transaminases (AST/ALT), masquerading as systemic inflammation or liver dysfunction.",
+    checked: true,
+    criticality: "critical",
+  },
+  {
+    id: "prelab-3",
+    hoursBefore: 12,
+    timeLabel: "12 Hours Prior",
+    title: "Strict Caloric Fast (Zero Food, Coffee, or Tea)",
+    instruction: "Only plain room-temperature water. Absolutely no coffee, espresso, herbal infusions, chewing gum, or mints.",
+    rationale: "Even calorie-free black coffee stimulates gastric acid secretion, triggers hepatic CYP1A2 activity, and accelerates lipolysis, temporarily altering circulating free fatty acids and fasting glucose.",
+    checked: false,
+    criticality: "critical",
+  },
+  {
+    id: "prelab-4",
+    hoursBefore: 1,
+    timeLabel: "60 Minutes Prior",
+    title: "Euglycemic Hydration Protocol (500 mL Still Water)",
+    instruction: "Drink 400 to 500 mL of still water 45-60 minutes before arriving at the laboratory.",
+    rationale: "Dehydration causes hemoconcentration—artificially elevating hematocrit, serum albumin, electrolytes, and creatinine. Proper plasma hydration also prevents venous collapse, ensuring smooth, painless venipuncture.",
+    checked: false,
+    criticality: "recommended",
+  },
+  {
+    id: "prelab-5",
+    hoursBefore: 0,
+    timeLabel: "At Lab (Waiting Room)",
+    title: "10-Minute Quiet Seated Postural Stabilization",
+    instruction: "Sit calmly in the waiting area for at least 10 minutes prior to entering the phlebotomy chair.",
+    rationale: "Shifting from standing to seated causes fluid redistribution from extravascular space back into the vascular compartment. Standing right before puncture elevates serum albumin, total cholesterol, and calcium by 5-9% due to orthostatic hemoconcentration.",
+    checked: false,
+    criticality: "clinical-best-practice",
+  },
+];
+
 
 
 

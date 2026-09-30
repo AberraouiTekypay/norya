@@ -17,6 +17,8 @@ import {
   FamilyMember,
   Score2RiskProfile,
   MealPlate,
+  CircadianHabit,
+  PreLabStep,
 } from "@/types/health";
 import {
   initialSarahProfile,
@@ -34,6 +36,8 @@ import {
   initialFamilyMembers,
   initialMealPlates,
   initialScore2Profile,
+  initialCircadianHabits,
+  initialPreLabSteps,
 } from "@/data/mockHealthData";
 import { translations, Language, Translations } from "@/data/translations";
 
@@ -93,6 +97,14 @@ interface HealthContextType {
   setIsNutritionModalOpen: (open: boolean) => void;
   isSupplementModalOpen: boolean;
   setIsSupplementModalOpen: (open: boolean) => void;
+  isFhirModalOpen: boolean;
+  setIsFhirModalOpen: (open: boolean) => void;
+  isPreLabModalOpen: boolean;
+  setIsPreLabModalOpen: (open: boolean) => void;
+  circadianHabits: CircadianHabit[];
+  toggleCircadianHabit: (habitId: string) => void;
+  preLabSteps: PreLabStep[];
+  togglePreLabStep: (stepId: string) => void;
   score2Profile: Score2RiskProfile;
   updateScore2Profile: (updates: Partial<Score2RiskProfile>) => void;
   mealPlates: MealPlate[];
@@ -120,6 +132,10 @@ export const HealthProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [activeFamilyMemberId, setActiveFamilyMemberId] = useState<string>("fam-sarah");
   const [isNutritionModalOpen, setIsNutritionModalOpen] = useState<boolean>(false);
   const [isSupplementModalOpen, setIsSupplementModalOpen] = useState<boolean>(false);
+  const [isFhirModalOpen, setIsFhirModalOpen] = useState<boolean>(false);
+  const [isPreLabModalOpen, setIsPreLabModalOpen] = useState<boolean>(false);
+  const [circadianHabits, setCircadianHabits] = useState<CircadianHabit[]>(initialCircadianHabits);
+  const [preLabSteps, setPreLabSteps] = useState<PreLabStep[]>(initialPreLabSteps);
   const [score2Profile, setScore2Profile] = useState<Score2RiskProfile>(initialScore2Profile);
   const [mealPlates] = useState<MealPlate[]>(initialMealPlates);
   const [isSyncingAll, setIsSyncingAll] = useState<boolean>(false);
@@ -607,6 +623,28 @@ export const HealthProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }, 600);
   };
 
+  const toggleCircadianHabit = (habitId: string) => {
+    setCircadianHabits((prev) =>
+      prev.map((h) => {
+        if (h.id === habitId) {
+          const newCompleted = !h.completed;
+          return {
+            ...h,
+            completed: newCompleted,
+            streakDays: newCompleted ? h.streakDays + 1 : Math.max(0, h.streakDays - 1),
+          };
+        }
+        return h;
+      })
+    );
+  };
+
+  const togglePreLabStep = (stepId: string) => {
+    setPreLabSteps((prev) =>
+      prev.map((s) => (s.id === stepId ? { ...s, checked: !s.checked } : s))
+    );
+  };
+
   return (
     <HealthContext.Provider
       value={{
@@ -665,6 +703,14 @@ export const HealthProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setIsNutritionModalOpen,
         isSupplementModalOpen,
         setIsSupplementModalOpen,
+        isFhirModalOpen,
+        setIsFhirModalOpen,
+        isPreLabModalOpen,
+        setIsPreLabModalOpen,
+        circadianHabits,
+        toggleCircadianHabit,
+        preLabSteps,
+        togglePreLabStep,
         score2Profile,
         updateScore2Profile,
         mealPlates,

@@ -279,3 +279,27 @@ export interface MealPlate {
   apoBTargeting: boolean;
   description: string;
 }
+
+export interface CircadianHabit {
+  id: string;
+  title: string;
+  timeWindow: string; // e.g. "07:30 - 08:30"
+  period: "morning" | "noon" | "afternoon" | "evening";
+  biologicalTarget: string;
+  action: string;
+  scienceNote: string;
+  completed: boolean;
+  streakDays: number;
+}
+
+export interface PreLabStep {
+  id: string;
+  hoursBefore: number; // e.g. 48, 24, 12, 1, 0
+  timeLabel: string;
+  title: string;
+  instruction: string;
+  rationale: string;
+  checked: boolean;
+  criticality: "critical" | "recommended" | "clinical-best-practice";
+}
+
