@@ -91,6 +91,8 @@ interface HealthContextType {
   addFamilyDoctorQuestion: (memberId: string, question: string) => void;
   isNutritionModalOpen: boolean;
   setIsNutritionModalOpen: (open: boolean) => void;
+  isSupplementModalOpen: boolean;
+  setIsSupplementModalOpen: (open: boolean) => void;
   score2Profile: Score2RiskProfile;
   updateScore2Profile: (updates: Partial<Score2RiskProfile>) => void;
   mealPlates: MealPlate[];
@@ -117,6 +119,7 @@ export const HealthProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>(initialFamilyMembers);
   const [activeFamilyMemberId, setActiveFamilyMemberId] = useState<string>("fam-sarah");
   const [isNutritionModalOpen, setIsNutritionModalOpen] = useState<boolean>(false);
+  const [isSupplementModalOpen, setIsSupplementModalOpen] = useState<boolean>(false);
   const [score2Profile, setScore2Profile] = useState<Score2RiskProfile>(initialScore2Profile);
   const [mealPlates] = useState<MealPlate[]>(initialMealPlates);
   const [isSyncingAll, setIsSyncingAll] = useState<boolean>(false);
@@ -660,6 +663,8 @@ export const HealthProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         addFamilyDoctorQuestion,
         isNutritionModalOpen,
         setIsNutritionModalOpen,
+        isSupplementModalOpen,
+        setIsSupplementModalOpen,
         score2Profile,
         updateScore2Profile,
         mealPlates,

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -12,8 +12,19 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+export const viewport: Viewport = {
+  themeColor: "#0F172A",
+  width: "device-width",
+  initialScale: 1,
+};
+
 export const metadata: Metadata = {
   title: "Norya — Your Health. One Place. One Plan.",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Norya",
+  },
   description:
     "Bring your health data, wearables, blood tests and habits together. Norya helps you understand what matters and build a practical, science-backed plan. An EM300.co Company.",
   keywords: [

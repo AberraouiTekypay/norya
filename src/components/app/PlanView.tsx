@@ -15,6 +15,7 @@ import {
   FlaskConical,
   X,
   Utensils,
+  ShieldCheck,
 } from "lucide-react";
 
 export const PlanView: React.FC = () => {
@@ -29,6 +30,7 @@ export const PlanView: React.FC = () => {
     checkinExperiment,
     startNewExperiment,
     setIsNutritionModalOpen,
+    setIsSupplementModalOpen,
   } = useHealth();
 
   const [newTaskTitle, setNewTaskTitle] = useState("");
@@ -74,7 +76,14 @@ export const PlanView: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => setIsSupplementModalOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#FAFAF8] border border-[#0F172A]/10 text-xs font-semibold text-[#0F172A] hover:bg-[#F1F5F9] transition-colors"
+          >
+            <ShieldCheck className="w-4 h-4 text-[#14B8A6]" />
+            <span>Supplement Auditor</span>
+          </button>
           <button
             onClick={() => setShowSundayReview(true)}
             className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white border border-[#0F172A]/10 text-xs font-semibold text-[#0F172A] hover:bg-[#F1F5F9] shadow-2xs transition-colors"

@@ -15,6 +15,7 @@ import {
   Info,
 } from "lucide-react";
 import { Score2Card } from "./Score2Card";
+import { BioAgeCard } from "./BioAgeCard";
 
 export const ProgressView: React.FC = () => {
   const { user, opportunityScore } = useHealth();
@@ -121,6 +122,9 @@ export const ProgressView: React.FC = () => {
 
       {/* 10-Year ESC SCORE2 Cardiovascular Risk Trajectory */}
       <Score2Card />
+
+      {/* Biological Age & PhenoAge Trajectory */}
+      <BioAgeCard />
 
       {/* Key Metric Trend Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
