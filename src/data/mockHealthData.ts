@@ -15,6 +15,9 @@ import {
   MealPlate,
   CircadianHabit,
   PreLabStep,
+  DlcnScore,
+  PgxGeneProfile,
+  PediatricScreeningPlan,
 } from "@/types/health";
 
 export const initialSarahProfile: UserProfile = {
@@ -1266,6 +1269,98 @@ export const initialPreLabSteps: PreLabStep[] = [
     criticality: "clinical-best-practice",
   },
 ];
+
+export const initialDlcnScore: DlcnScore = {
+  totalScore: 2,
+  category: "Unlikely FH",
+  familyHistoryPoints: 1, // Mohamed had premature CAD at age 62 (first-degree relative)
+  clinicalHistoryPoints: 0, // Sarah has no personal history of premature CAD
+  physicalExamPoints: 0, // No tendon xanthomas or arcus cornealis < 45
+  ldlPoints: 1, // LDL-C is 138 mg/dL (ApoB is 105 mg/dL; DLCN threshold for 1 pt is 155 mg/dL, so borderline 0-1)
+  geneticPoints: 0, // No confirmed pathogenic variant in LDLR/APOB/PCSK9
+  interpretation: "Score is ≤ 2 points. Classic monogenic Familial Hypercholesterolemia (HeFH) is clinically unlikely. Sarah's atherogenic particle burden (ApoB 105 mg/dL) represents polygenic susceptibility exacerbated by visceral metabolic and lifestyle drivers.",
+  recommendations: [
+    "Focus primarily on dietary viscous fiber (psyllium, oats, legumes) and exercise rather than immediate PCSK9i monoclonal antibody therapy.",
+    "Perform baseline non-invasive carotid ultrasound (IMT / plaque screening) at age 45 to verify absence of subclinical vascular calcification.",
+    "Screen daughter Sofia at age 11 as part of routine universal pediatric cardiovascular guidelines.",
+  ],
+};
+
+export const initialPgxProfiles: PgxGeneProfile[] = [
+  {
+    id: "pgx-1",
+    gene: "SLCO1B1",
+    diplotype: "*1/*5 (rs4149056 521T>C)",
+    phenotype: "Decreased Function",
+    drugCategory: "Statins (HMG-CoA Reductase Inhibitors)",
+    clinicalImplication: "Reduced activity of hepatic uptake transporter OATP1B1 causes impaired hepatic clearance of statins, elevating systemic blood concentrations by 140–220% and significantly raising the risk of Statin-Associated Muscle Symptoms (SAMS) or myalgia.",
+    cpicGuidelineRecommendation: "If pharmacotherapy is initiated: Prefer Rosuvastatin (lower starting dose 5-10mg) or Pravastatin over high-dose Simvastatin/Atorvastatin. Consider combination with Ezetimibe 10mg to achieve target ApoB without high statin doses.",
+    evidenceLevel: "Level 1A (CPIC/DPWG Consensus)",
+    affectedFamilyMember: "Sarah",
+  },
+  {
+    id: "pgx-2",
+    gene: "CYP2C19",
+    diplotype: "*2/*2",
+    phenotype: "Poor Metabolizer",
+    drugCategory: "Antiplatelet Prodrugs (Clopidogrel / Plavix)",
+    clinicalImplication: "Carries two non-functional alleles, drastically reducing hepatic CYP2C19 bioactivation of clopidogrel into its active thiol antiplatelet metabolite, creating high risk of recurrent ischemic atherothrombotic events.",
+    cpicGuidelineRecommendation: "Avoid clopidogrel. For secondary prevention in Mohamed: Maintain current Aspirin Protect (acetylsalicylic acid 100mg) or consider non-CYP2C19-dependent direct P2Y12 inhibitors (Ticagrelor or Prasugrel) if high ischemic risk.",
+    evidenceLevel: "Level 1A (CPIC/DPWG Consensus)",
+    affectedFamilyMember: "Mohamed",
+  },
+  {
+    id: "pgx-3",
+    gene: "CYP3A4",
+    diplotype: "*1/*1",
+    phenotype: "Normal Metabolizer",
+    drugCategory: "Atorvastatin & Perindopril Interactions",
+    clinicalImplication: "Normal CYP3A4 metabolic activity, but highly susceptible to competitive inhibition by exogenous furanocoumarins (grapefruit juice) or induction by St. John's Wort.",
+    cpicGuidelineRecommendation: "Maintain zero concurrent intake of St. John's wort or concentrated grapefruit extract while taking Mohamed's Atorvastatin 20mg.",
+    evidenceLevel: "Level 1A (CPIC/DPWG Consensus)",
+    affectedFamilyMember: "Mohamed",
+  },
+];
+
+export const initialPediatricScreening: PediatricScreeningPlan = {
+  childName: "Sofia M.",
+  age: 11,
+  status: "Due for baseline screening",
+  recommendedAgeWindow: "Ages 9 to 11 (Universal Pediatric Window)",
+  targetBiomarkers: [
+    {
+      marker: "Non-HDL Cholesterol & ApoB",
+      pediatricNormal: "< 120 mg/dL (Non-HDL) / < 75 mg/dL (ApoB)",
+      why: "Captures the sum of all circulating atherogenic particles in growing children with familial premature CAD history.",
+    },
+    {
+      marker: "LDL-C (Low-Density Lipoprotein)",
+      pediatricNormal: "< 110 mg/dL (Acceptable), 110-129 (Borderline), ≥ 130 (Elevated)",
+      why: "Standard guideline metric for identifying early pediatric heterozygous familial hypercholesterolemia.",
+    },
+    {
+      marker: "Fasting Blood Glucose / HbA1c",
+      pediatricNormal: "< 99 mg/dL / < 5.4%",
+      why: "Screens for early pediatric insulin resistance, especially important given maternal and grandfather cardio-metabolic markers.",
+    },
+  ],
+  pediatricGuidelineConsensus: "The European Atherosclerosis Society (EAS), American Academy of Pediatrics (AAP), and NHLBI consensus unanimously recommend universal lipid screening between ages 9 and 11, especially when a parent or grandparent experienced premature vascular events.",
+  actionChecklist: [
+    {
+      task: "Schedule non-fasting or 12h fasting lipid panel with Sofia's pediatrician",
+      completed: false,
+    },
+    {
+      task: "Share family cardiovascular tree (Grandfather Mohamed CAD at 62) with pediatrician",
+      completed: true,
+    },
+    {
+      task: "Anchor Mediterranean family meal architecture (fiber & legumes, no sweetened beverages)",
+      completed: true,
+    },
+  ],
+};
+
 
 
 

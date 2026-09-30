@@ -303,3 +303,45 @@ export interface PreLabStep {
   criticality: "critical" | "recommended" | "clinical-best-practice";
 }
 
+export interface DlcnScore {
+  totalScore: number;
+  category: "Definite FH" | "Probable FH" | "Possible FH" | "Unlikely FH";
+  familyHistoryPoints: number;
+  clinicalHistoryPoints: number;
+  physicalExamPoints: number;
+  ldlPoints: number;
+  geneticPoints: number;
+  interpretation: string;
+  recommendations: string[];
+}
+
+export interface PgxGeneProfile {
+  id: string;
+  gene: string;
+  diplotype: string;
+  phenotype: "Normal Metabolizer" | "Intermediate Metabolizer" | "Poor Metabolizer" | "Decreased Function";
+  drugCategory: string;
+  clinicalImplication: string;
+  cpicGuidelineRecommendation: string;
+  evidenceLevel: "Level 1A (CPIC/DPWG Consensus)" | "Level 1B" | "Level 2";
+  affectedFamilyMember: "Sarah" | "Mohamed" | "Sofia";
+}
+
+export interface PediatricScreeningPlan {
+  childName: string;
+  age: number;
+  status: "Due for baseline screening" | "Screened" | "Upcoming";
+  recommendedAgeWindow: string;
+  targetBiomarkers: {
+    marker: string;
+    pediatricNormal: string;
+    why: string;
+  }[];
+  pediatricGuidelineConsensus: string;
+  actionChecklist: {
+    task: string;
+    completed: boolean;
+  }[];
+}
+
+

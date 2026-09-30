@@ -11,6 +11,9 @@ import {
   ChevronRight,
   UserCheck,
   Check,
+  Dna,
+  Baby,
+  ShieldCheck,
 } from "lucide-react";
 
 export const FamilyView: React.FC = () => {
@@ -22,6 +25,10 @@ export const FamilyView: React.FC = () => {
     addFamilyDoctorQuestion,
     addDoctorQuestion,
     setActiveTab,
+    setIsDlcnModalOpen,
+    setIsPgxModalOpen,
+    setIsPediatricModalOpen,
+    setIsSupplementModalOpen,
   } = useHealth();
 
   const [newQuestionText, setNewQuestionText] = useState("");
@@ -234,6 +241,57 @@ export const FamilyView: React.FC = () => {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Genetics, PGx & Pediatric Actions for Active Member */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+          {activeMember.id === "fam-sarah" && (
+            <>
+              <button
+                onClick={() => setIsDlcnModalOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-white border border-[#0F172A]/10 font-semibold text-[#0F172A] hover:bg-[#FAFAF8] shadow-2xs transition-colors whitespace-nowrap"
+              >
+                <Dna className="w-3.5 h-3.5 text-[#14B8A6]" />
+                <span>DLCN Familial Hypercholesterolemia (FH) Calculator</span>
+              </button>
+              <button
+                onClick={() => setIsPgxModalOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-[#F0FDFA] border border-[#14B8A6]/30 font-semibold text-[#0F766E] hover:bg-[#CCFBF1] shadow-2xs transition-colors whitespace-nowrap"
+              >
+                <Dna className="w-3.5 h-3.5 text-[#14B8A6]" />
+                <span>SLCO1B1 Statin Sensitivity Profile</span>
+              </button>
+            </>
+          )}
+
+          {activeMember.id === "fam-mohamed" && (
+            <>
+              <button
+                onClick={() => setIsPgxModalOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-rose-50 border border-rose-200 font-semibold text-rose-800 hover:bg-rose-100 shadow-2xs transition-colors whitespace-nowrap"
+              >
+                <Dna className="w-3.5 h-3.5 text-rose-600" />
+                <span>CYP2C19 Antiplatelet / Clopidogrel Profile</span>
+              </button>
+              <button
+                onClick={() => setIsSupplementModalOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-white border border-[#0F172A]/10 font-semibold text-[#0F172A] hover:bg-[#FAFAF8] shadow-2xs transition-colors whitespace-nowrap"
+              >
+                <ShieldCheck className="w-3.5 h-3.5 text-[#14B8A6]" />
+                <span>Active Prescriptions Interaction Auditor</span>
+              </button>
+            </>
+          )}
+
+          {activeMember.id === "fam-sofia" && (
+            <button
+              onClick={() => setIsPediatricModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl bg-rose-50 border border-rose-200 font-semibold text-rose-800 hover:bg-rose-100 shadow-2xs transition-colors whitespace-nowrap"
+            >
+              <Baby className="w-3.5 h-3.5 text-rose-600" />
+              <span>Pediatric Cardiovascular Screening Protocol (Ages 9–11)</span>
+            </button>
+          )}
         </div>
 
         {/* 2-Column Grid: Medications & Screenings */}

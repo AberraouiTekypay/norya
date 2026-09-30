@@ -29,6 +29,9 @@ import { NutritionModal } from "./NutritionModal";
 import { SupplementAuditorModal } from "./SupplementAuditorModal";
 import { FhirExportModal } from "./FhirExportModal";
 import { PreLabModal } from "./PreLabModal";
+import { DlcnScoreModal } from "./DlcnScoreModal";
+import { PharmacogenomicsModal } from "./PharmacogenomicsModal";
+import { PediatricScreeningModal } from "./PediatricScreeningModal";
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -283,6 +286,15 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
 
       {/* Global Pre-Lab Diagnostic Preparation Protocol Modal */}
       <PreLabModal />
+
+      {/* Global DLCN Familial Hypercholesterolemia Modal */}
+      <DlcnScoreModal />
+
+      {/* Global Pharmacogenomics (PGx) Intelligence Modal */}
+      <PharmacogenomicsModal />
+
+      {/* Global Pediatric Cardiovascular Screening Modal */}
+      <PediatricScreeningModal />
 
       {/* Mobile Bottom Navigation */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#0F172A]/10 px-2 py-2 flex items-center justify-around shadow-lg print:hidden">

@@ -16,11 +16,18 @@ import {
   ArrowRight,
   Filter,
   Clock,
+  Dna,
 } from "lucide-react";
 
 export const LabsView: React.FC = () => {
-  const { labReports, uploadLabReport, setActiveTab, setSelectedBiomarker, setIsPreLabModalOpen } =
-    useHealth();
+  const {
+    labReports,
+    uploadLabReport,
+    setActiveTab,
+    setSelectedBiomarker,
+    setIsPreLabModalOpen,
+    setIsDlcnModalOpen,
+  } = useHealth();
   const [unitMode, setUnitMode] = useState<"standard" | "si">("standard"); // mg/dL vs mmol/L
   const [isUploading, setIsUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
@@ -99,6 +106,14 @@ export const LabsView: React.FC = () => {
           >
             <Clock className="w-3.5 h-3.5 text-[#14B8A6]" />
             <span>Pre-Lab Guide (48h)</span>
+          </button>
+
+          <button
+            onClick={() => setIsDlcnModalOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white border border-[#0F172A]/10 text-xs font-semibold text-[#0F172A] hover:bg-[#FAFAF8] transition-colors shadow-2xs"
+          >
+            <Dna className="w-3.5 h-3.5 text-[#14B8A6]" />
+            <span>DLCN FH Score</span>
           </button>
 
           <button

@@ -19,6 +19,9 @@ import {
   MealPlate,
   CircadianHabit,
   PreLabStep,
+  DlcnScore,
+  PgxGeneProfile,
+  PediatricScreeningPlan,
 } from "@/types/health";
 import {
   initialSarahProfile,
@@ -38,6 +41,9 @@ import {
   initialScore2Profile,
   initialCircadianHabits,
   initialPreLabSteps,
+  initialDlcnScore,
+  initialPgxProfiles,
+  initialPediatricScreening,
 } from "@/data/mockHealthData";
 import { translations, Language, Translations } from "@/data/translations";
 
@@ -101,6 +107,17 @@ interface HealthContextType {
   setIsFhirModalOpen: (open: boolean) => void;
   isPreLabModalOpen: boolean;
   setIsPreLabModalOpen: (open: boolean) => void;
+  isDlcnModalOpen: boolean;
+  setIsDlcnModalOpen: (open: boolean) => void;
+  isPgxModalOpen: boolean;
+  setIsPgxModalOpen: (open: boolean) => void;
+  isPediatricModalOpen: boolean;
+  setIsPediatricModalOpen: (open: boolean) => void;
+  dlcnScore: DlcnScore;
+  updateDlcnScore: (updates: Partial<DlcnScore>) => void;
+  pgxProfiles: PgxGeneProfile[];
+  pediatricScreening: PediatricScreeningPlan;
+  togglePediatricTask: (index: number) => void;
   circadianHabits: CircadianHabit[];
   toggleCircadianHabit: (habitId: string) => void;
   preLabSteps: PreLabStep[];
@@ -134,6 +151,12 @@ export const HealthProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [isSupplementModalOpen, setIsSupplementModalOpen] = useState<boolean>(false);
   const [isFhirModalOpen, setIsFhirModalOpen] = useState<boolean>(false);
   const [isPreLabModalOpen, setIsPreLabModalOpen] = useState<boolean>(false);
+  const [isDlcnModalOpen, setIsDlcnModalOpen] = useState<boolean>(false);
+  const [isPgxModalOpen, setIsPgxModalOpen] = useState<boolean>(false);
+  const [isPediatricModalOpen, setIsPediatricModalOpen] = useState<boolean>(false);
+  const [dlcnScore, setDlcnScore] = useState<DlcnScore>(initialDlcnScore);
+  const [pgxProfiles] = useState<PgxGeneProfile[]>(initialPgxProfiles);
+  const [pediatricScreening, setPediatricScreening] = useState<PediatricScreeningPlan>(initialPediatricScreening);
   const [circadianHabits, setCircadianHabits] = useState<CircadianHabit[]>(initialCircadianHabits);
   const [preLabSteps, setPreLabSteps] = useState<PreLabStep[]>(initialPreLabSteps);
   const [score2Profile, setScore2Profile] = useState<Score2RiskProfile>(initialScore2Profile);
@@ -645,6 +668,18 @@ export const HealthProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     );
   };
 
+  const updateDlcnScore = (updates: Partial<DlcnScore>) => {
+    setDlcnScore((prev) => ({ ...prev, ...updates }));
+  };
+
+  const togglePediatricTask = (index: number) => {
+    setPediatricScreening((prev) => {
+      const updated = [...prev.actionChecklist];
+      updated[index] = { ...updated[index], completed: !updated[index].completed };
+      return { ...prev, actionChecklist: updated };
+    });
+  };
+
   return (
     <HealthContext.Provider
       value={{
@@ -707,6 +742,17 @@ export const HealthProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setIsFhirModalOpen,
         isPreLabModalOpen,
         setIsPreLabModalOpen,
+        isDlcnModalOpen,
+        setIsDlcnModalOpen,
+        isPgxModalOpen,
+        setIsPgxModalOpen,
+        isPediatricModalOpen,
+        setIsPediatricModalOpen,
+        dlcnScore,
+        updateDlcnScore,
+        pgxProfiles,
+        pediatricScreening,
+        togglePediatricTask,
         circadianHabits,
         toggleCircadianHabit,
         preLabSteps,
