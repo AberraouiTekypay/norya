@@ -209,3 +209,73 @@ export interface HealthExperiment {
   expectedDelta?: string;
   scientificRationale: string;
 }
+
+export interface FamilyMember {
+  id: string;
+  name: string;
+  relationship: "self" | "parent" | "child" | "spouse";
+  relationLabel: string;
+  age: number;
+  gender: "female" | "male";
+  country: string;
+  city: string;
+  avatarInitial: string;
+  avatarBg: string;
+  primaryFocus: string;
+  conditions: string[];
+  medications: {
+    id: string;
+    name: string;
+    dosage: string;
+    schedule: "morning" | "noon" | "evening" | "bedtime";
+    scheduleLabel: string;
+    takenToday: boolean;
+    prescribedFor: string;
+  }[];
+  upcomingScreenings: {
+    id: string;
+    title: string;
+    dueDate: string;
+    provider: string;
+    status: "scheduled" | "due" | "current";
+    importance: "high" | "routine";
+    notes: string;
+  }[];
+  vitalSnippet: {
+    label: string;
+    value: string;
+    status: "normal" | "warning" | "positive";
+  };
+  doctorQuestions: string[];
+  emergencyContact: {
+    name: string;
+    phone: string;
+    relation: string;
+  };
+}
+
+export interface Score2RiskProfile {
+  baselineRiskPercent: number; // e.g. 3.8
+  riskCategory: "Low" | "Moderate" | "High" | "Very High";
+  age: number;
+  systolicBP: number;
+  nonHdlOrApoB: number;
+  isSmoker: boolean;
+  targetRiskPercent: number; // e.g. 2.1
+  relativeRiskReduction: number; // e.g. 44%
+}
+
+export interface MealPlate {
+  id: string;
+  mealName: string;
+  category: "breakfast" | "lunch" | "dinner" | "snack";
+  cuisine: "mediterranean_spain" | "maghreb_morocco" | "continental";
+  proteinAnchor: { name: string; grams: number; source: string };
+  viscousFiber: { name: string; grams: number; source: string };
+  slowCarb: { name: string; grams: number; source: string };
+  healthyFat: { name: string; source: string };
+  orderOfEating: string[];
+  glycemicImpact: "blunted" | "low" | "moderate";
+  apoBTargeting: boolean;
+  description: string;
+}

@@ -13,6 +13,7 @@ import { TimelineView } from "@/components/app/TimelineView";
 import { PreventionView } from "@/components/app/PreventionView";
 import { DoctorModeView } from "@/components/app/DoctorModeView";
 import { DevicesView } from "@/components/app/DevicesView";
+import { FamilyView } from "@/components/app/FamilyView";
 import { SettingsView } from "@/components/app/SettingsView";
 import { OnboardingModal } from "@/components/app/OnboardingModal";
 
@@ -30,6 +31,7 @@ export default function AppPage() {
       {activeTab === "timeline" && <TimelineView />}
       {activeTab === "prevention" && <PreventionView />}
       {activeTab === "devices" && <DevicesView />}
+      {activeTab === "family" && <FamilyView />}
       {activeTab === "doctor" && <DoctorModeView />}
       {activeTab === "settings" && <SettingsView />}
 

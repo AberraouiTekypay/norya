@@ -21,9 +21,11 @@ import {
   CheckCircle2,
   Watch,
   X,
+  Users,
 } from "lucide-react";
 import { BiomarkerModal } from "./BiomarkerModal";
 import { BloodPressureModal } from "./BloodPressureModal";
+import { NutritionModal } from "./NutritionModal";
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -54,6 +56,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
     { id: "progress", label: t.nav.progress, icon: TrendingUp, badge: "Score 31" },
     { id: "timeline", label: t.nav.timeline, icon: History, badge: undefined },
     { id: "prevention", label: t.nav.prevention, icon: ShieldCheck, badge: "6/8" },
+    { id: "family", label: t.nav.family || "Circle of Care", icon: Users, badge: "3 Profiles" },
     { id: "devices", label: t.nav.devices, icon: Watch, badge: "4 Synced" },
     { id: "doctor", label: t.nav.doctor, icon: Stethoscope, badge: "Brief" },
     { id: "settings", label: t.nav.settings, icon: Settings, badge: undefined },
@@ -265,6 +268,9 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
 
       {/* Global Blood Pressure Protocol Modal */}
       <BloodPressureModal />
+
+      {/* Global Nutrition Architecture Modal */}
+      <NutritionModal />
 
       {/* Mobile Bottom Navigation */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#0F172A]/10 px-2 py-2 flex items-center justify-around shadow-lg print:hidden">

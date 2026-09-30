@@ -14,6 +14,9 @@ import {
   ConnectedDevice,
   BloodPressureLog,
   HealthExperiment,
+  FamilyMember,
+  Score2RiskProfile,
+  MealPlate,
 } from "@/types/health";
 import {
   initialSarahProfile,
@@ -28,6 +31,9 @@ import {
   initialConnectedDevices,
   initialBloodPressureLogs,
   initialHealthExperiments,
+  initialFamilyMembers,
+  initialMealPlates,
+  initialScore2Profile,
 } from "@/data/mockHealthData";
 import { translations, Language, Translations } from "@/data/translations";
 
@@ -78,11 +84,21 @@ interface HealthContextType {
   checkinExperiment: (experimentId: string, day: number, note?: string) => void;
   startNewExperiment: (exp: Omit<HealthExperiment, "id" | "currentDay" | "checkins" | "status">) => void;
   togglePreventionItem: (id: string) => void;
+  familyMembers: FamilyMember[];
+  activeFamilyMemberId: string;
+  setActiveFamilyMemberId: (id: string) => void;
+  toggleFamilyMedication: (memberId: string, medId: string) => void;
+  addFamilyDoctorQuestion: (memberId: string, question: string) => void;
+  isNutritionModalOpen: boolean;
+  setIsNutritionModalOpen: (open: boolean) => void;
+  score2Profile: Score2RiskProfile;
+  updateScore2Profile: (updates: Partial<Score2RiskProfile>) => void;
+  mealPlates: MealPlate[];
 }
 
 const HealthContext = createContext<HealthContextType | undefined>(undefined);
 
-const STORAGE_KEY = "norya_state_v3";
+const STORAGE_KEY = "norya_state_v4";
 
 export const HealthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserProfile>(initialSarahProfile);
@@ -98,6 +114,11 @@ export const HealthProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [bloodPressureLogs, setBloodPressureLogs] = useState<BloodPressureLog[]>(initialBloodPressureLogs);
   const [isBPModalOpen, setIsBPModalOpen] = useState<boolean>(false);
   const [experiments, setExperiments] = useState<HealthExperiment[]>(initialHealthExperiments);
+  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>(initialFamilyMembers);
+  const [activeFamilyMemberId, setActiveFamilyMemberId] = useState<string>("fam-sarah");
+  const [isNutritionModalOpen, setIsNutritionModalOpen] = useState<boolean>(false);
+  const [score2Profile, setScore2Profile] = useState<Score2RiskProfile>(initialScore2Profile);
+  const [mealPlates] = useState<MealPlate[]>(initialMealPlates);
   const [isSyncingAll, setIsSyncingAll] = useState<boolean>(false);
   const [selectedBiomarker, setSelectedBiomarker] = useState<Biomarker | null>(null);
   const [activeTab, setActiveTab] = useState<string>("home");
@@ -123,6 +144,9 @@ export const HealthProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           if (parsed.bloodPressureLogs) setBloodPressureLogs(parsed.bloodPressureLogs);
           if (parsed.experiments) setExperiments(parsed.experiments);
           if (parsed.preventionItems) setPreventionItems(parsed.preventionItems);
+          if (parsed.familyMembers) setFamilyMembers(parsed.familyMembers);
+          if (parsed.activeFamilyMemberId) setActiveFamilyMemberId(parsed.activeFamilyMemberId);
+          if (parsed.score2Profile) setScore2Profile(parsed.score2Profile);
           if (parsed.doctorSummary) setDoctorSummary(parsed.doctorSummary);
           if (parsed.language) setLanguage(parsed.language);
           if (parsed.unitSystem) setUnitSystem(parsed.unitSystem);
@@ -147,6 +171,9 @@ export const HealthProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           bloodPressureLogs,
           experiments,
           preventionItems,
+          familyMembers,
+          activeFamilyMemberId,
+          score2Profile,
           doctorSummary,
           language,
           unitSystem,
@@ -156,7 +183,7 @@ export const HealthProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     } catch (e) {
       console.error("Failed to save local storage state:", e);
     }
-  }, [user, priorities, dailyTasks, labReports, coachMessages, connectedDevices, bloodPressureLogs, experiments, preventionItems, doctorSummary, language, unitSystem]);
+  }, [user, priorities, dailyTasks, labReports, coachMessages, connectedDevices, bloodPressureLogs, experiments, preventionItems, familyMembers, activeFamilyMemberId, score2Profile, doctorSummary, language, unitSystem]);
 
   const t = translations[language] || translations.en;
 
@@ -310,6 +337,58 @@ export const HealthProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     );
   };
 
+  const toggleFamilyMedication = (memberId: string, medId: string) => {
+    setFamilyMembers((prev) =>
+      prev.map((m) => {
+        if (m.id !== memberId) return m;
+        return {
+          ...m,
+          medications: m.medications.map((med) =>
+            med.id === medId ? { ...med, takenToday: !med.takenToday } : med
+          ),
+        };
+      })
+    );
+  };
+
+  const addFamilyDoctorQuestion = (memberId: string, question: string) => {
+    setFamilyMembers((prev) =>
+      prev.map((m) => {
+        if (m.id !== memberId) return m;
+        return {
+          ...m,
+          doctorQuestions: [...m.doctorQuestions, question],
+        };
+      })
+    );
+  };
+
+  const updateScore2Profile = (updates: Partial<Score2RiskProfile>) => {
+    setScore2Profile((prev) => {
+      const updated = { ...prev, ...updates };
+      const bpFactor = Math.pow(1.025, updated.systolicBP - 134);
+      const lipidFactor = Math.pow(1.018, updated.nonHdlOrApoB - 105);
+      const smokeMultiplier = updated.isSmoker ? 1.85 : 1.0;
+      let calculated = 3.8 * bpFactor * lipidFactor * smokeMultiplier;
+      calculated = Math.max(0.6, Math.min(28.0, parseFloat(calculated.toFixed(1))));
+
+      let category: "Low" | "Moderate" | "High" | "Very High" = "Low";
+      if (calculated >= 10.0) category = "Very High";
+      else if (calculated >= 7.5) category = "High";
+      else if (calculated >= 2.5) category = "Moderate";
+      else category = "Low";
+
+      const rrr = parseFloat((((3.8 - calculated) / 3.8) * 100).toFixed(1));
+
+      return {
+        ...updated,
+        baselineRiskPercent: calculated,
+        riskCategory: category,
+        relativeRiskReduction: rrr > 0 ? rrr : 0,
+      };
+    });
+  };
+
   const resetToDemoUser = () => {
     setUser(initialSarahProfile);
     setPriorities(initialPriorities);
@@ -323,6 +402,9 @@ export const HealthProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setConnectedDevices(initialConnectedDevices);
     setBloodPressureLogs(initialBloodPressureLogs);
     setExperiments(initialHealthExperiments);
+    setFamilyMembers(initialFamilyMembers);
+    setActiveFamilyMemberId("fam-sarah");
+    setScore2Profile(initialScore2Profile);
     if (typeof window !== "undefined") {
       localStorage.removeItem(STORAGE_KEY);
     }
@@ -571,6 +653,16 @@ export const HealthProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         checkinExperiment,
         startNewExperiment,
         togglePreventionItem,
+        familyMembers,
+        activeFamilyMemberId,
+        setActiveFamilyMemberId,
+        toggleFamilyMedication,
+        addFamilyDoctorQuestion,
+        isNutritionModalOpen,
+        setIsNutritionModalOpen,
+        score2Profile,
+        updateScore2Profile,
+        mealPlates,
       }}
     >
       {children}

@@ -19,6 +19,7 @@ import {
   Info,
   Watch,
   RotateCw,
+  Utensils,
 } from "lucide-react";
 
 export const HomeView: React.FC = () => {
@@ -38,6 +39,7 @@ export const HomeView: React.FC = () => {
     setSelectedBiomarker,
     labReports,
     setIsBPModalOpen,
+    setIsNutritionModalOpen,
     t,
   } = useHealth();
 
@@ -235,17 +237,26 @@ export const HomeView: React.FC = () => {
                   )}
 
                   {item.rank === 3 && (
-                    <button
-                      onClick={() =>
-                        setSelectedBiomarker(
-                          labReports[0]?.biomarkers.find((b) => b.canonicalName === "ApoB") || null
-                        )
-                      }
-                      className="w-full py-2 rounded-xl bg-[#0F172A] text-white text-xs font-semibold hover:bg-[#1E293B] transition-colors flex items-center justify-center gap-1.5"
-                    >
-                      <Sparkles className="w-3.5 h-3.5 text-[#14B8A6]" />
-                      <span>Explore ApoB Levers & Chart →</span>
-                    </button>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <button
+                        onClick={() => setIsNutritionModalOpen(true)}
+                        className="flex-1 py-2 rounded-xl bg-[#CCFBF1] text-[#0F766E] text-xs font-semibold hover:bg-[#99F6E4] transition-colors flex items-center justify-center gap-1.5"
+                      >
+                        <Utensils className="w-3.5 h-3.5 text-[#14B8A6]" />
+                        <span>Meal Blueprint →</span>
+                      </button>
+                      <button
+                        onClick={() =>
+                          setSelectedBiomarker(
+                            labReports[0]?.biomarkers.find((b) => b.canonicalName === "ApoB") || null
+                          )
+                        }
+                        className="flex-1 py-2 rounded-xl bg-[#0F172A] text-white text-xs font-semibold hover:bg-[#1E293B] transition-colors flex items-center justify-center gap-1.5"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-[#14B8A6]" />
+                        <span>ApoB Levers →</span>
+                      </button>
+                    </div>
                   )}
 
                   {/* Expandable deeper evidence & "Not important now" */}

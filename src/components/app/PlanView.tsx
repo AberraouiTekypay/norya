@@ -14,6 +14,7 @@ import {
   RotateCcw,
   FlaskConical,
   X,
+  Utensils,
 } from "lucide-react";
 
 export const PlanView: React.FC = () => {
@@ -27,6 +28,7 @@ export const PlanView: React.FC = () => {
     experiments,
     checkinExperiment,
     startNewExperiment,
+    setIsNutritionModalOpen,
   } = useHealth();
 
   const [newTaskTitle, setNewTaskTitle] = useState("");
@@ -302,32 +304,45 @@ export const PlanView: React.FC = () => {
                 </div>
 
                 {/* Experiment Action Row */}
-                <div className="pt-2 border-t border-[#0F172A]/5 flex items-center justify-between text-xs">
-                  {isActive ? (
-                    <button
-                      onClick={() => checkinExperiment(exp.id, exp.currentDay, "Completed daily protocol")}
-                      className="px-3.5 py-1.5 rounded-xl bg-[#0F172A] text-white text-xs font-semibold hover:bg-[#1E293B] transition-colors"
-                    >
-                      Check In Today (Day {exp.currentDay})
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() =>
-                        startNewExperiment({
-                          title: exp.title,
-                          category: exp.category,
-                          hypothesis: exp.hypothesis,
-                          durationDays: 14,
-                          targetBiomarker: exp.targetBiomarker,
-                          expectedDelta: exp.expectedDelta,
-                          scientificRationale: exp.scientificRationale,
-                        })
-                      }
-                      className="px-3.5 py-1.5 rounded-xl bg-[#CCFBF1] text-[#0F766E] text-xs font-semibold hover:bg-[#99F6E4] transition-colors"
-                    >
-                      Activate Protocol →
-                    </button>
-                  )}
+                <div className="pt-2 border-t border-[#0F172A]/5 flex items-center justify-between text-xs gap-2 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    {isActive ? (
+                      <button
+                        onClick={() => checkinExperiment(exp.id, exp.currentDay, "Completed daily protocol")}
+                        className="px-3.5 py-1.5 rounded-xl bg-[#0F172A] text-white text-xs font-semibold hover:bg-[#1E293B] transition-colors"
+                      >
+                        Check In Today (Day {exp.currentDay})
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() =>
+                          startNewExperiment({
+                            title: exp.title,
+                            category: exp.category,
+                            hypothesis: exp.hypothesis,
+                            durationDays: 14,
+                            targetBiomarker: exp.targetBiomarker,
+                            expectedDelta: exp.expectedDelta,
+                            scientificRationale: exp.scientificRationale,
+                          })
+                        }
+                        className="px-3.5 py-1.5 rounded-xl bg-[#CCFBF1] text-[#0F766E] text-xs font-semibold hover:bg-[#99F6E4] transition-colors"
+                      >
+                        Activate Protocol →
+                      </button>
+                    )}
+
+                    {exp.category === "nutrition" && (
+                      <button
+                        onClick={() => setIsNutritionModalOpen(true)}
+                        className="px-3 py-1.5 rounded-xl bg-[#FAFAF8] text-[#0F766E] border border-[#14B8A6]/20 hover:bg-[#CCFBF1] transition-colors flex items-center gap-1 font-medium"
+                      >
+                        <Utensils className="w-3.5 h-3.5 text-[#14B8A6]" />
+                        <span>Meal Blueprint</span>
+                      </button>
+                    )}
+                  </div>
+
                   <span className="text-[11px] text-[#64748B]">14-Day N=1 Trial</span>
                 </div>
               </div>

@@ -12,6 +12,7 @@ export interface Translations {
     prevention: string;
     doctor: string;
     devices: string;
+    family: string;
     settings: string;
   };
   home: {
@@ -75,6 +76,7 @@ export const translations: Record<Language, Translations> = {
       prevention: "Prevention",
       doctor: "Doctor Handoff",
       devices: "Connected Devices",
+      family: "Circle of Care",
       settings: "Profile & Settings",
     },
     home: {
@@ -136,6 +138,7 @@ export const translations: Record<Language, Translations> = {
       prevention: "Prevención",
       doctor: "Resumen Médico",
       devices: "Dispositivos Conectados",
+      family: "Círculo Familiar",
       settings: "Perfil y Ajustes",
     },
     home: {
@@ -197,6 +200,7 @@ export const translations: Record<Language, Translations> = {
       prevention: "Prévention",
       doctor: "Fiche Médecin",
       devices: "Appareils Connectés",
+      family: "Cercle Familial",
       settings: "Profil & Paramètres",
     },
     home: {

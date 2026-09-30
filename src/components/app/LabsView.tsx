@@ -254,6 +254,167 @@ export const LabsView: React.FC = () => {
         </div>
       )}
 
+      {/* Longitudinal 12-Month Comparison Matrix */}
+      <div className="p-6 sm:p-8 rounded-3xl bg-white border border-[#0F172A]/8 shadow-card space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#0F172A]/8 gap-4">
+          <div>
+            <div className="text-xs font-semibold uppercase tracking-wider text-[#64748B]">
+              Multi-Quarter Biological Trends
+            </div>
+            <h2 className="text-lg sm:text-xl font-bold text-[#0F172A]">
+              12-Month Longitudinal Comparison (Sep 2025 – Sep 2026)
+            </h2>
+            <p className="text-xs text-[#64748B] mt-0.5">
+              Comparative biomarker trajectory validating your metabolic and cardiovascular response.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => window.print()}
+              className="px-3.5 py-2 rounded-xl bg-[#FAFAF8] border border-[#0F172A]/10 text-xs font-semibold text-[#0F172A] hover:bg-[#F1F5F9] transition-colors flex items-center gap-1.5"
+            >
+              <FileText className="w-3.5 h-3.5 text-[#14B8A6]" />
+              <span>Export Matrix</span>
+            </button>
+            <button
+              onClick={() => setActiveTab("doctor")}
+              className="px-3.5 py-2 rounded-xl bg-[#0F172A] text-white text-xs font-semibold hover:bg-[#1E293B] transition-colors flex items-center gap-1.5"
+            >
+              <Stethoscope className="w-3.5 h-3.5 text-[#14B8A6]" />
+              <span>Add to Doctor Mode</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Matrix Table */}
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr className="border-b border-[#0F172A]/8 text-[#64748B] font-semibold text-[11px] uppercase tracking-wider">
+                <th className="pb-3 pr-4">Biomarker</th>
+                <th className="pb-3 px-3 font-mono">Sep 2025 (Baseline)</th>
+                <th className="pb-3 px-3 font-mono">Mar 2026 (6-Mo)</th>
+                <th className="pb-3 px-3 font-mono">Sep 2026 (Current)</th>
+                <th className="pb-3 px-3">12-Mo Delta</th>
+                <th className="pb-3 pl-3">Clinical Target</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#0F172A]/5">
+              {[
+                {
+                  name: "Apolipoprotein B (ApoB)",
+                  markerCode: "ApoB",
+                  unit: "mg/dL",
+                  p1: 121,
+                  p2: 112,
+                  p3: 105,
+                  delta: "-16 mg/dL (-13.2%)",
+                  favorable: true,
+                  target: "< 80 mg/dL (ESC Mod Risk)",
+                },
+                {
+                  name: "HbA1c (Glycated Hemoglobin)",
+                  markerCode: "HbA1c",
+                  unit: "%",
+                  p1: 6.1,
+                  p2: 5.9,
+                  p3: 5.7,
+                  delta: "-0.4% (-6.5%)",
+                  favorable: true,
+                  target: "< 5.6% (Optimal Glycemia)",
+                },
+                {
+                  name: "LDL Cholesterol (Calculated)",
+                  markerCode: "LDL-C",
+                  unit: "mg/dL",
+                  p1: 158,
+                  p2: 146,
+                  p3: 138,
+                  delta: "-20 mg/dL (-12.6%)",
+                  favorable: true,
+                  target: "< 100 mg/dL",
+                },
+                {
+                  name: "Triglycerides",
+                  markerCode: "Triglycerides",
+                  unit: "mg/dL",
+                  p1: 185,
+                  p2: 168,
+                  p3: 142,
+                  delta: "-43 mg/dL (-23.2%)",
+                  favorable: true,
+                  target: "< 150 mg/dL",
+                },
+                {
+                  name: "High-Sensitivity CRP (hs-CRP)",
+                  markerCode: "hs-CRP",
+                  unit: "mg/L",
+                  p1: 2.4,
+                  p2: 1.8,
+                  p3: 1.2,
+                  delta: "-1.2 mg/L (-50.0%)",
+                  favorable: true,
+                  target: "< 1.0 mg/L (Low Vascular Risk)",
+                },
+                {
+                  name: "25-OH Vitamin D3",
+                  markerCode: "Vitamin D",
+                  unit: "ng/mL",
+                  p1: 20,
+                  p2: 24,
+                  p3: 29,
+                  delta: "+9 ng/mL (+45.0%)",
+                  favorable: true,
+                  target: "> 30 ng/mL (Sufficiency)",
+                },
+              ].map((row, idx) => {
+                const targetMarker = currentReport?.biomarkers.find(
+                  (b) => b.canonicalName === row.markerCode
+                );
+
+                return (
+                  <tr
+                    key={idx}
+                    onClick={() => targetMarker && setSelectedBiomarker(targetMarker)}
+                    className="hover:bg-[#FAFAF8] cursor-pointer transition-colors group"
+                  >
+                    <td className="py-3.5 pr-4 font-bold text-[#0F172A] group-hover:text-[#14B8A6] flex items-center gap-1.5">
+                      <span>{row.name}</span>
+                    </td>
+                    <td className="py-3.5 px-3 font-mono text-[#64748B]">
+                      {row.p1} {row.unit}
+                    </td>
+                    <td className="py-3.5 px-3 font-mono text-[#64748B]">
+                      {row.p2} {row.unit}
+                    </td>
+                    <td className="py-3.5 px-3 font-mono font-bold text-[#0F172A]">
+                      {row.p3} {row.unit}
+                    </td>
+                    <td className="py-3.5 px-3">
+                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#16A34A] bg-[#16A34A]/10 px-2 py-0.5 rounded-full">
+                        <TrendingDown className="w-3 h-3" />
+                        <span>{row.delta}</span>
+                      </span>
+                    </td>
+                    <td className="py-3.5 pl-3 text-[#0F766E] font-medium text-[11px]">
+                      {row.target}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="p-4 rounded-2xl bg-[#FAFAF8] border border-[#0F172A]/5 text-xs text-[#64748B] flex items-start gap-2.5">
+          <Sparkles className="w-4 h-4 text-[#14B8A6] shrink-0 mt-0.5" />
+          <p>
+            <strong>Clinical Interpretation:</strong> Consistent 12-month reductions in ApoB (-13.2%), HbA1c (-6.5%), and systemic inflammation (hs-CRP -50.0%) correlate with Sarah's sustained 3.7 kg weight reduction and adherence to the daily walking and protein anchor habits.
+          </p>
+        </div>
+      </div>
+
     </div>
   );
 };
